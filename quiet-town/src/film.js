@@ -158,12 +158,12 @@ const towerTop = new THREE.Vector3(-19, 24.6, -76);
 
 // crowd seating for the square (front row = family)
 const FAMILY_SEATS = { mom: [-11, -50], dad: [-8, -50], grandma: [-5, -50] };
-function seatCrowd(t, { cheer = 0, faceExpr, lookUp = 0, skip = [] } = {}) {
+function seatCrowd(t, { cheer = 0, faceExpr, lookUp = 0, skip = [], nudge = {} } = {}) {
   let i = 0;
   for (const z of [-50, -45, -40]) for (const x of [-13, -11, -8, -5, -2.4, 2.4, 5, 8, 11, 13]) {
     if (z === -50 && x <= -2.4) continue;             // family seats + the kid's seat
     const ch = crowd[i++]; if (!ch || skip.includes(ch)) continue;
-    seatOn(ch, x, 1.35, z + .3, Math.PI); ch.idle(t + i);
+    seatOn(ch, x + (nudge[z + ',' + x] || 0), 1.35, z + .3, Math.PI); ch.idle(t + i);
     if (cheer) ch.jazz(t + i * .13);
     if (faceExpr) ch.face(faceExpr);
     if (lookUp) ch.head.rotation.x = -lookUp;
@@ -666,9 +666,10 @@ S[47] = (t, u) => { // right onto the mayor
   cam([1.8, 5.4, -61], [1.6, 3.8, -68], [1.8, 5.2, -62], [1.6, 3.9, -68], ease(u), 40);
   env.shadowAt = new THREE.Vector3(1.6, 0, -66); env.shadowSpan = 12;
 };
+const SPREAD = { '-45,-2.4': .85, '-45,-5': -.15 };   // the two seated behind the boy and Grandma, scooted apart
 S[48] = (t, u) => { // grandma picked her knitting back up
   ceremonyBase(t);
-  seatCrowd(t, { faceExpr: 'happy' }); family(t, { grandma: 'skip' });
+  seatCrowd(t, { faceExpr: 'happy', nudge: SPREAD }); family(t, { grandma: 'skip' });
   seatOn(C.grandma, -5, 1.35, -49.7, Math.PI).face(u > .5 ? 'smile' : 'deadpan');
   const up = ease(seg(u, .1, .6)); C.grandma.hold(knit, 'r'); knit.position.set(-.9, -.1, 0); C.grandma.forward(.05 + .7 * up); C.grandma.lArm.rotation.x += Math.sin(t * 12) * .08 * up; C.grandma.rArm.rotation.x -= Math.sin(t * 12) * .08 * up;
   seatOn(C.kid, -2.6, 1.35, -49.7, Math.PI).face('grin'); medal.visible = true; C.kid.head.rotation.y = -.4;
@@ -676,7 +677,7 @@ S[48] = (t, u) => { // grandma picked her knitting back up
 };
 S[49] = (t, u) => { // GRANDMA: runs in the family
   ceremonyBase(t);
-  seatCrowd(t, { faceExpr: 'happy' }); family(t, { grandma: 'skip' });
+  seatCrowd(t, { faceExpr: 'happy', nudge: SPREAD }); family(t, { grandma: 'skip' });
   // Grandma and the boy turn to look at each other; she whispers the line (lip-synced) and winks on "family"
   const turn = ease(seg(t, 0, .25)), lvl = mouthAt(49, t);
   seatOn(C.grandma, -5, 1.35, -49.7, Math.PI - .2 - turn * .3).face(t > 1.0 ? 'winkTalk' + lvl : lvl ? 'smileTalk' + lvl : 'smile');
