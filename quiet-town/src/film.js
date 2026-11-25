@@ -561,7 +561,7 @@ S[38] = (t, u) => { // then Dad stood up
 S[39] = (t, u) => { // DAD: he saved this town
   ceremonyBase(t);
   seatCrowd(t, { faceExpr: 'gasp' }); family(t, { dad: 'skip' });
-  C.dad.at(-8, 0, -51.2, Math.PI + .15).face('angry').point('r', .3); C.dad.rArm.rotation.x += Math.sin(t * 9) * .08;
+  C.dad.at(-8, 0, -51.2, Math.PI + .15).face(talk('angry', mouthAt(39, t))).point('r', .3); C.dad.rArm.rotation.x += Math.sin(t * 9) * .08;
   cam([-7.2, 4.9, -55.8], [-8, 3.8, -50.8], [-7.4, 4.9, -55.1], [-8, 3.8, -50.8], ease(u), 42);
 };
 S[40] = (t, u) => { // then Mom
@@ -576,7 +576,7 @@ S[41] = (t, u) => { // MOM: then fine all of us
   ceremonyBase(t);
   seatCrowd(t, { faceExpr: 'gasp' }); family(t, { dad: 'skip', mom: 'skip' });
   C.dad.at(-8, 0, -51.2, Math.PI).face('determined').crossArms();
-  C.mom.at(-11, 0, -51.2, Math.PI - .15).face('angry').crossArms(); C.mom.head.rotation.z = Math.sin(t * 6) * .05;
+  C.mom.at(-11, 0, -51.2, Math.PI - .15).face(talk('angry', mouthAt(41, t))).crossArms(); C.mom.head.rotation.z = Math.sin(t * 6) * .05;
   cam([-10.2, 4.9, -55.6], [-10.8, 3.8, -50.8], [-10.4, 4.9, -55], [-10.8, 3.8, -50.8], ease(u), 42);
 };
 S[42] = (t, u) => { // grandma puts down her knitting

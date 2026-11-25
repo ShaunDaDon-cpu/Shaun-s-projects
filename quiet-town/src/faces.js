@@ -64,6 +64,9 @@ function draw(ctx, expr, f) {
     case 'winkTalk0': eye(L, ey, ctx); curve(ctx, R - 32, ey + 4, R, ey - 22, R + 32, ey + 4, 15); lash(); curve(ctx, cx - 60, my - 6, cx + 10, my + 40, cx + 70, my - 16); break;
     case 'winkTalk1': eye(L, ey, ctx); curve(ctx, R - 32, ey + 4, R, ey - 22, R + 32, ey + 4, 15); lash(); grinShape(ctx, cx, my - 8, 34, 14); break;
     case 'winkTalk2': eye(L, ey, ctx); curve(ctx, R - 32, ey + 4, R, ey - 22, R + 32, ey + 4, 15); lash(); grinShape(ctx, cx, my - 14, 46, 26); break;
+    // talking while angry (Dad and Mom standing up to the mayor)
+    case 'angryTalk1': E({ r: 28, ry: 32 }); brows(ctx, cx, ey, 'angry'); mouthOpen(ctx, cx, my + 10, 30, 18, { teeth: true, tongue: false }); break;
+    case 'angryTalk2': E({ r: 28, ry: 32 }); brows(ctx, cx, ey, 'angry'); mouthOpen(ctx, cx, my + 12, 44, 36, { teeth: true }); break;
     // talking while sad / pouting (lip-sync levels 1 = small, 2 = open; level 0 is the plain expression)
     case 'sadTalk1': E(); lash(); brows(ctx, cx, ey, 'sad'); mouthOpen(ctx, cx, my + 8, 26, 16, { tongue: false }); break;
     case 'sadTalk2': E(); lash(); brows(ctx, cx, ey, 'sad'); mouthOpen(ctx, cx, my + 10, 38, 32); break;
