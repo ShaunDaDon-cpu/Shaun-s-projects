@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Quiet Town</title>
+<style>
+  @font-face { font-family: Fredoka; font-weight: 600; src: url(node_modules/@fontsource/fredoka/files/fredoka-latin-600-normal.woff2) format('woff2'); }
+  @font-face { font-family: Fredoka; font-weight: 700; src: url(node_modules/@fontsource/fredoka/files/fredoka-latin-700-normal.woff2) format('woff2'); }
+  html, body { margin: 0; background: #000; }
+  canvas#out { display: block; width: auto; height: 100vh; margin: 0 auto; }
+  body:not(.render) { cursor: pointer; }
+</style>
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
+</head>
+<body>
+<canvas id="out" width="1080" height="1920"></canvas>
+<script type="module">
+  // Rendering contract: window.draw(frame), window.FRAMES, window.FPS, window.CUES, window.SCORE, window.READY.
+  const render = location.search.includes('render');
+  if (render) document.body.classList.add('render');
+  await Promise.all([document.fonts.load('700 80px Fredoka'), document.fonts.load('600 40px Fredoka')]);
+  const film = await import('./src/film.js');
+  const { SCORE } = await import('./src/score.js');
+  Object.assign(window, { draw: film.draw, FRAMES: film.FRAMES, FPS: film.FPS, CUES: film.CUES, SCORE });
+  window.READY = true;
+  if (!render) {
+    // preview: ?t=seconds shows one frame; click plays from there with the score
+    const p = new URLSearchParams(location.search); let f = Math.round((+p.get('t') || 0) * film.FPS);
+    film.draw(f);
+    document.body.addEventListener('click', () => {
+      const ac = new AudioContext(); SCORE(ac, f / film.FPS); const t0 = ac.currentTime - f / film.FPS;
+      const tick = () => { f = Math.round((ac.currentTime - t0) * film.FPS); if (f < film.FRAMES) { film.draw(f); requestAnimationFrame(tick); } };
+      tick();
+    }, { once: true });
+  }
+</script>
+</body>
+</html>
