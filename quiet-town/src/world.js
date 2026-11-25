@@ -256,7 +256,7 @@ export function buildTown(scene) {
   for (const x of [-9, -5, 5, 9]) school.add(box(2.6, 2.6, .2, '#cfe8ff', x, 6.6, 6.05, { cast: false }));
   g.add(box(20, .15, 22, '#c9b79c', 32, .08, -46, { cast: false }));
   // town sign with the rule
-  const sign = new THREE.Group(); sign.position.set(9, 0, 52); sign.rotation.y = -.35; g.add(sign); T.sign = sign;
+  const sign = new THREE.Group(); sign.position.set(9, 0, 52); sign.rotation.y = -.146; g.add(sign); T.sign = sign;
   sign.add(box(.4, 5, .4, '#5c4033', -2, 2.5, 0), box(.4, 5, .4, '#5c4033', 2, 2.5, 0));
   const sp = new THREE.Mesh(new THREE.PlaneGeometry(5, 6.25), new THREE.MeshLambertMaterial({ map: noShoutTex() })); sp.position.set(0, 6.6, .25); sign.add(sp); sign.add(box(5.3, 6.5, .4, '#5c4033', 0, 6.6, 0));
   // trees

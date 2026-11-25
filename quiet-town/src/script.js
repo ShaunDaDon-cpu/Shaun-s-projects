@@ -7,7 +7,7 @@ export const BEAT_FRAMES = BEAT * FPS;   // 24
 
 // who: narrator (kid) unless set. style: 'narr' | 'side' | 'shout'
 export const LINES = [
-  /* 1 */ { text: 'In my town, shouting is illegal.', beats: 4 },
+  /* 1 */ { text: 'In my town, shouting is illegal.', beats: 4, captionY: 1390 },
   /* 2 */ { text: 'One loud noise, and the mountain comes down.', beats: 6 },
   /* 3 */ { text: 'So everybody whispers. All the time.', beats: 4 },
   /* 4 */ { text: 'We cheer with jazz hands.', beats: 4 },

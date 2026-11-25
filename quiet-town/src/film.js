@@ -237,7 +237,8 @@ function snowPuff(t, pos, n = 40, size = 1, color = '#ffffff') { for (let i = 0;
 const S = {};
 S[1] = (t, u) => { // town sign with the rule
   env.mode = 'day';
-  cam([15.5, 5.6, 64], [3, 8.5, 20], [14.6, 5.9, 61.5], [3, 8.8, 20], ease(u), 52);
+  // the sign is the subject: whole and centred-left, the snowcapped peak towering over the street behind it
+  cam([6.6, 2.4, 70], [17, 20.1, -30.5], [6.4, 2.6, 68], [17, 20.3, -30.5], ease(u), 55);
   C.neighB.at(-3, 0, 38, Math.PI).walk(t * 6, .4);   // townsfolk tiptoeing
   C.neighA.at(3, 0, 30, Math.PI).walk(t * 6 + 1, .4);
   env.shadowAt = new THREE.Vector3(5, 0, 40);

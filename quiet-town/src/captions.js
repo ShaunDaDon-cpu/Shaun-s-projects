@@ -30,7 +30,7 @@ export function drawCaption(ctx, L, t, W, H) {
   const lines = wrap(ctx, words, shout ? 960 : 900);
   const lh = size * 1.12, space = ctx.measureText(' ').width + (shout ? 22 : 17) * .8;
   let idx = 0;
-  const top = Y - (lines.length - 1) * lh / 2;
+  const top = (L.captionY || Y) - (lines.length - 1) * lh / 2;
   const shakeX = shout ? Math.sin(t * 63) * 6 + Math.sin(t * 41) * 4 : 0, shakeY = shout ? Math.sin(t * 57) * 5 : 0;
   // speaker tag
   if ((side || shout) && TAGS[L.who]) {
