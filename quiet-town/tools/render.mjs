@@ -47,6 +47,13 @@ if (mode === 'stills') {
   rmSync(dir, { recursive: true }); console.log('sheet ->', out);
 } else if (mode === 'audio') {
   await renderAudio(page, out);
+} else if (mode === 'remux') {
+  // re-render the score and remux it into an existing video: node tools/render.mjs remux out/quiet-town.mp4
+  const wav = out.replace(/\.mp4$/, '') + '.wav', tmpv = out.replace(/\.mp4$/, '') + '.prev.mp4';
+  await renderAudio(page, wav);
+  execFileSync('mv', [out, tmpv]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmpv, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
+  rmSync(tmpv); console.log('remuxed ->', out);
 } else if (mode === 'video') {
   const W = +opt('--workers', 4), from = Math.round(+opt('--from', 0) * info.FPS), to = Math.min(info.FRAMES, Math.round(+opt('--to', info.FRAMES / info.FPS) * info.FPS));
   const tmp = join(dirname(resolve(out)), '.segments'); rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
@@ -73,7 +80,7 @@ if (mode === 'stills') {
   const wav = out.replace(/\.mp4$/, '') + '.wav';
   if (!existsSync(wav) || process.argv.includes('--reaudio')) await renderAudio(page, wav);
   const ss = String(from / info.FPS), dur = String((to - from) / info.FPS);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-ss', ss, '-t', dur, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-ss', ss, '-t', dur, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
   writeFileSync(out.replace(/\.mp4$/, '') + '.cues.json', JSON.stringify(info.CUES.filter(c => c * info.FPS > from && c * info.FPS < to).map(c => +(c - from / info.FPS).toFixed(3))));
   rmSync(tmp, { recursive: true });
   console.log(`video -> ${out}  (${to - from} frames in ${((Date.now() - t0) / 1000).toFixed(0)}s)`);

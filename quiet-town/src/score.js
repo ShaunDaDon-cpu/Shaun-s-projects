@@ -91,7 +91,7 @@ export function SCORE(ac, offset = 0) {
   bell(s(5) + .05, N('A5'), .05, 0, 2);                                                                         // lullaby ding
   babyCry(s(8) + .25, .95, .22); thud(s(8) + .55, .3, 120);                                                      // born loud
   babyCry(s(9) + .75, .45, .15); slide(s(9) + .95, .8, 1800, 500, .1); bonk(s(9) + 1.75, .45); tweet(s(9) + 2.0); tweet(s(9) + 2.6, .05);
-  muffled(s(10) + .1, d(10) - .2, .17); muffled(s(11), d(11) * .55, .15); thud(s(11) + d(11) * .55, .35, 70);
+  muffled(s(10), d(10) - .1, .17); muffled(s(11), d(11) * .55, .15); bell(s(11), N('A5'), .07, -.2, .8); bass(s(11), N('F2'), .42, .3); thud(s(11) + d(11) * .55, .35, 70);
   for (let i = 0; i < 4; i++) tick(s(12) + .2 + i * .22, .05, 2600 + i * 200);                                   // giggles
   for (const [i, n] of ['C6', 'A5', 'F5', 'C6', 'Bb5', 'G5'].entries()) bell(s(15) + i * BEAT / 2 + .02, N(n), .045, .2, 1.2);   // grandma's music box
 
@@ -106,13 +106,15 @@ export function SCORE(ac, offset = 0) {
     for (let b = 0; b < 4; b++) { const tb = t + b * BEAT; if (tb >= B1) break; tick(tb, .05 + grow * .03, 1500); if (b % 2 === 0) kick(tb, .32 + grow * .25); pluck(tb, N(ch[0]) * 2, .1, .25, .3); }
   }
   thunder(s(16) + .25); thunder(s(16) + 1.7, .4); thunder(s(17) + .1, .45); thunder(s(22) + .55, .5); thunder(s(25) + 1.3, .55);
-  crackSfx(s(17) + .3); crackSfx(s(17) + 1.2, .25); crackSfx(s(22) + .2, .35);
+  crackSfx(s(17) + .3); crackSfx(s(17) + 1.2, .25); crackSfx(s(22), .45); thud(s(22), .4, 70);
   water(s(17), d(17), .12); water(s(22), d(22), .16);
   for (let i = 0; i < 6; i++) { const tt = s(18) + i * .21; tick(tt, .03, 600); }
   for (let k = 0; k < 7; k++) { const tk = s(20) + .087 + k * .349; if (tk - s(20) < d(20) * .4 || tk - s(20) > d(20) * .65) knock(tk, .3); }
-  inhale(s(24), d(24) + .1, .18);
+  inhale(s(24) + .1, d(24), .15); kick(s(24), .8); bass(s(24), N('E2'), .45, .3); pluck(s(24), N('E4'), .14, 0, .3);
   riser(s(25), d(25), .1);
   // ================= C. the break (shot 26) and THE SHOUT (shot 27) =================
+  music.gain.setValueAtTime(1, at(s(26) - .01)); music.gain.linearRampToValueAtTime(0, at(s(26) + .03)); music.gain.setValueAtTime(0, at(s(27) - .01)); music.gain.linearRampToValueAtTime(1, at(s(27)));
+  verbGain.gain.setValueAtTime(.32, at(s(26) - .01)); verbGain.gain.linearRampToValueAtTime(0, at(s(26) + .05)); verbGain.gain.setValueAtTime(.32, at(s(27) - .01));
   setRain(rainG, s(26), .03); rainG.gain.setValueAtTime(.03, at(s(27) - .02));
   const S27 = s(27);
   foghorn(S27, 1.9, [N('A1'), N('E2'), N('A2')], .34); boom(S27, .95); crash(S27, .3);
@@ -138,7 +140,7 @@ export function SCORE(ac, offset = 0) {
   thud(s(33), .5, 60); water(s(33), d(33) * .4, .14);
   setRain(rainG, s(33), .07); setRain(rainG, s(34) + d(34), .0);
   // ================= E. calm (shot 34): A major resolution, dawn birds =================
-  pad(s(34), d(34) + .4, [N('A2'), N('E3'), N('A3'), N('C#4'), N('E4')], .05, 1400, music, .08);
+  kick(s(34), .45); bass(s(34), N('A2'), .45, .5); pad(s(34), d(34) + .4, [N('A2'), N('E3'), N('A3'), N('C#4'), N('E4')], .05, 1400, music, .08);
   for (const [i, n] of ['A5', 'C#6', 'E6', 'A6'].entries()) bell(s(34) + i * BEAT, N(n), .05, i % 2 ? .3 : -.3, 1.6);
   tweet(s(34) + .5, .05); tweet(s(34) + 1.2, .04);
   // ================= F. ceremony (shots 35-37): fanfare, then the fine =================
@@ -161,15 +163,16 @@ export function SCORE(ac, offset = 0) {
     if (n === 42) { for (let r = 0; r < 4; r++) snare(tb + r * BEAT / 4, .05 + (tb - s(42)) / d(42) * .2); }
   }
   riser(s(42), d(42), .08);
+  for (let n = 38; n <= 42; n++) { tom(s(n), 95, .5); crash(s(n), .08); }
   const S43 = s(43);
-  foghorn(S43, 1.6, [N('D1'), N('A1'), N('D2'), N('F2')], .36); boom(S43 + .2, .9); crash(S43 + .2, .3);
+  foghorn(S43, 1.6, [N('D1'), N('A1'), N('D2'), N('F2')], .36); boom(S43, .9); crash(S43, .3);   // deliberate stinger: Grandma's shout
   whoosh(S43 + .3, .55, 600, 3000, .3); thud(S43 + .85, .7, 70); gasp(S43 + .25, .12);
   // ================= H. the mountain (44-47) =================
-  rumble(s(44), d(44) + d(45) * .5, .6);
+  boom(s(44), .3); rumble(s(44), d(44) + d(45) * .5, .6);
   for (let b = 0; b < LINES[44].beats; b++) tick(s(45) + b * BEAT, .07, 900);          // frozen: a clock in the silence
-  gasp(s(45), .09);
+  gasp(s(45), .09); for (const n of ['B5', 'C6', 'F#6']) bell(s(45), N(n), .06, 0, .9);
   whoosh(s(46) + d(46) * .05, d(46) * .78, 1500, 200, .3); thud(s(46) + d(46) * .85, .6, 55); whoosh(s(46) + d(46) * .85, .5, 800, 300, .15);
-  slide(s(47) + d(47) * .25, d(47) * .3, 1600, 400, .16); boing(s(47) + d(47) * .55, .32); tweet(s(47) + d(47) * .7, .05);
+  thud(s(47), .45, 80); slide(s(47) + d(47) * .25, d(47) * .3, 1600, 400, .16); boing(s(47) + d(47) * .55, .32); tweet(s(47) + d(47) * .7, .05);
   // ================= I. coda (48-end): the tiptoe theme on a music box =================
   const I0 = s(48);
   for (let bar = 0; I0 + bar * BAR < DURATION - BAR; bar++) {
