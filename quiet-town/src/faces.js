@@ -58,6 +58,12 @@ function draw(ctx, expr, f) {
     case 'sleep': curve(ctx, L - 32, ey, L, ey + 26, L + 32, ey, 14); curve(ctx, R - 32, ey, R, ey + 26, R + 32, ey, 14); mouthOpen(ctx, cx, my + 6, 22, 18, { tongue: false }); break;
     case 'halfsleep': line(ctx, [[L - 32, ey], [L + 32, ey]], 14); line(ctx, [[R - 32, ey], [R + 32, ey]], 14); ctx.fillStyle = INK; ctx.fillRect(L - 26, ey, 52, 18); ctx.fillRect(R - 26, ey, 52, 18); mouthOpen(ctx, cx + 10, my + 6, 26, 14, { tongue: false }); break;
     case 'whisper': E(); lash(); brows(ctx, cx, ey, 'up'); mouthOpen(ctx, cx, my + 4, 20, 22, { tongue: false }); break;
+    // talking with a knowing smile, and winking mid-word (Grandma's last line)
+    case 'smileTalk1': E(); lash(); grinShape(ctx, cx, my - 8, 34, 14); break;
+    case 'smileTalk2': E(); lash(); grinShape(ctx, cx, my - 14, 46, 26); break;
+    case 'winkTalk0': eye(L, ey, ctx); curve(ctx, R - 32, ey + 4, R, ey - 22, R + 32, ey + 4, 15); lash(); curve(ctx, cx - 60, my - 6, cx + 10, my + 40, cx + 70, my - 16); break;
+    case 'winkTalk1': eye(L, ey, ctx); curve(ctx, R - 32, ey + 4, R, ey - 22, R + 32, ey + 4, 15); lash(); grinShape(ctx, cx, my - 8, 34, 14); break;
+    case 'winkTalk2': eye(L, ey, ctx); curve(ctx, R - 32, ey + 4, R, ey - 22, R + 32, ey + 4, 15); lash(); grinShape(ctx, cx, my - 14, 46, 26); break;
     // talking while sad / pouting (lip-sync levels 1 = small, 2 = open; level 0 is the plain expression)
     case 'sadTalk1': E(); lash(); brows(ctx, cx, ey, 'sad'); mouthOpen(ctx, cx, my + 8, 26, 16, { tongue: false }); break;
     case 'sadTalk2': E(); lash(); brows(ctx, cx, ey, 'sad'); mouthOpen(ctx, cx, my + 10, 38, 32); break;

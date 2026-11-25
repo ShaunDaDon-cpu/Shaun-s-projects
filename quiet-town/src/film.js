@@ -626,9 +626,13 @@ S[48] = (t, u) => { // grandma picked her knitting back up
 S[49] = (t, u) => { // GRANDMA: runs in the family
   ceremonyBase(t);
   seatCrowd(t, { faceExpr: 'happy' }); family(t, { grandma: 'skip' });
-  seatOn(C.grandma, -5, 1.35, -49.7, Math.PI - .35).face(u > .55 ? 'wink' : 'smile'); C.grandma.hold(knit, 'r'); knit.position.set(-.9, -.1, 0); C.grandma.forward(.75); C.grandma.head.rotation.y = .3;
-  seatOn(C.kid, -2.6, 1.35, -49.7, Math.PI + .35).face(u > .65 ? 'happy' : 'grin'); medal.visible = true; C.kid.head.rotation.y = -.3;
-  cam([-3.8, 4.2, -57], [-3.8, 3.1, -50], [-3.8, 4.1, -56.2], [-3.8, 3.1, -50], ease(u), 44);
+  // Grandma and the boy turn to look at each other; she whispers the line (lip-synced) and winks on "family"
+  const turn = ease(seg(t, 0, .25)), lvl = mouthAt(49, t);
+  seatOn(C.grandma, -5, 1.35, -49.7, Math.PI - .2 - turn * .3).face(t > 1.0 ? 'winkTalk' + lvl : lvl ? 'smileTalk' + lvl : 'smile');
+  C.grandma.hold(knit, 'r'); knit.position.set(-.9, -.1, 0); C.grandma.forward(.7); C.grandma.head.rotation.y = -turn * .35; C.grandma.head.rotation.z = -.06;
+  C.grandma.body.rotation.z = -.04; C.grandma.head.rotation.x = .05 * Math.sin(t * 6) * (lvl ? 1 : 0);
+  seatOn(C.kid, -2.6, 1.35, -49.7, Math.PI + .2 + turn * .3).face(t > 1.15 ? 'happy' : 'grin'); medal.visible = true; C.kid.head.rotation.y = turn * .35; C.kid.head.rotation.x = -.12;
+  cam([-3.8, 4.3, -58.4], [-3.8, 3.2, -50], [-3.8, 4.2, -57.6], [-3.8, 3.2, -50], ease(u), 44);
 };
 S[50] = (t, u) => { // end card: the town by day, rising
   env.mode = 'day'; T.cornice.visible = false; T.plug.visible = true;
