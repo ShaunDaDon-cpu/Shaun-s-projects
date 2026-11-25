@@ -213,7 +213,8 @@ export function buildTown(scene) {
   T.home = T.houses[2];                                   // kid's house: left side, z = 6
   // second row of houses behind, for a fuller town
   for (const side of [-1, 1]) for (const z of [28, 12, -4]) { const hh = house({ seed: seed++, h: 8 }); hh.position.set(side * 33, 0, z); hh.rotation.y = -side * Math.PI / 2; g.add(hh); T.houses.push(hh); }
-  for (let z = 44; z > -24; z -= 14) for (const x of [-8.6, 8.6]) g.add(lamp(x, z, T.lampMats));
+  T.lampObjs = [];
+  for (let z = 44; z > -24; z -= 14) for (const x of [-8.6, 8.6]) { const l = lamp(x, z, T.lampMats); l.userData.at = [x, z]; T.lampObjs.push(l); g.add(l); }
   // town square + church with bell tower
   g.add(box(50, .2, 36, '#d6ccc2', 0, .1, -52, { cast: false }));
   const church = new THREE.Group(); church.position.set(0, 0, -76); g.add(church); T.church = church;

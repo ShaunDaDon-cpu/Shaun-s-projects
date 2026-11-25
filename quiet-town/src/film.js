@@ -221,7 +221,7 @@ function resetAll(t) {
   for (const r of rings) r.visible = false;
   for (const z of zs) z.visible = false;
   pN = 0; medal.visible = false;
-  T.group.visible = true; stadium.visible = false; for (const r of Object.values(R)) r.visible = false;
+  T.group.visible = true; stadium.visible = false; for (const l of T.lampObjs) l.visible = true; for (const r of Object.values(R)) r.visible = false;
   pillow2.visible = false;
   for (const s of T.crackSegs) s.visible = false; T.crack.scale.set(1, 1, 1);
   T.plug.visible = false; T.plug.scale.setScalar(1);
@@ -314,10 +314,17 @@ S[2] = (t, u) => { // "one loud noise, and the mountain comes down": the imagine
   env.whiteout = seg(u, .965, 1);
   env.shadowAt = new THREE.Vector3(0, 0, 0); env.shadowSpan = 70;
 };
-S[3] = (t, u) => { // neighbours whispering over the fence
-  C.neighA.at(-11.6, 0, 22, Math.PI / 2).cup('r'); C.neighA.face('whisper'); C.neighA.body.rotation.z = -.15; C.neighA.head.rotation.z = -.12;
-  C.neighB.at(-8.6, 0, 22.4, -Math.PI / 2 + .75).face(t > .7 ? 'gasp' : 'open'); C.neighB.idle(t); C.neighB.head.rotation.y = -.4;
-  cam([-1.5, 5.4, 34], [-10.2, 4.2, 22], [-2.8, 5.3, 32.4], [-10.2, 4.2, 22], ease(u), 42);
+S[3] = (t, u) => { // neighbours whispering over the fence: she mouths it behind her hand, he leans in to listen
+  const her = C.neighA, him = C.neighB, lean = ease(seg(t, 0, .35));
+  her.at(-11.9, 0, 22, Math.PI / 2 - 1.05).face('whisper' + mouthAt(3, t));
+  her.rArm.rotation.set(-2.44, -.55, -.54);                        // far hand cupped beside her cheek, on his side
+  her.body.rotation.z = -.1; her.head.rotation.z = -.08;
+  him.at(-8.3, 0, 22.2, -.3).face(u > .72 ? 'gasp' : 'open');
+  him.body.rotation.z = .2 * lean; him.head.rotation.z = .2 * lean;              // leaning in, ear turned toward her
+  him.lArm.rotation.set(2.3 * lean, 1.15 * lean, 1.26 * lean);                    // hand cupped at his ear
+  him.rArm.rotation.z = .06;
+  for (const l of T.lampObjs) if (l.userData.at[0] < 0 && l.userData.at[1] === 30) l.visible = false;   // keep the lamppost out of the two-shot
+  cam([-10.1, 5.2, 35], [-10.1, 4.1, 22], [-10.1, 5.1, 33.6], [-10.1, 4.1, 22], ease(u), 42);
   env.shadowAt = new THREE.Vector3(-10, 0, 22); env.shadowSpan = 20;
 };
 S[4] = (t, u) => { // stadium: silent jazz-hands cheering
