@@ -13,6 +13,15 @@ import { join, dirname, resolve } from 'node:path';
 import { serve } from './serve.mjs';
 
 const [mode, out, arg] = process.argv.slice(2);
+// final audio: the score, ducked under the voiceover (out/vo.wav, from tools/voiceover.py) when there is one
+function mixArgs(video, wav, extra = []) {
+  const vo = join(root, 'out', 'vo.wav');
+  const norm = 'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false';
+  if (!existsSync(vo)) return ['-i', video, ...extra, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', norm];
+  return ['-i', video, ...extra, '-i', wav, '-i', vo, '-filter_complex',
+    `[2:a]volume=1.5,asplit=2[vo][key];[1:a][key]sidechaincompress=threshold=0.03:ratio=3:attack=15:release=350[duck];[duck][vo]amix=inputs=2:normalize=0,${norm}[a]`,
+    '-map', '0:v', '-map', '[a]', '-c:v', 'copy'];
+}
 const opt = (n, d) => { const i = process.argv.indexOf(n); return i < 0 ? d : process.argv[i + 1]; };
 const root = resolve(dirname(new URL(import.meta.url).pathname), '..');
 const srv = await serve(root);
@@ -52,7 +61,7 @@ if (mode === 'stills') {
   const wav = out.replace(/\.mp4$/, '') + '.wav', tmpv = out.replace(/\.mp4$/, '') + '.prev.mp4';
   await renderAudio(page, wav);
   execFileSync('mv', [out, tmpv]);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmpv, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...mixArgs(tmpv, wav), '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
   rmSync(tmpv); console.log('remuxed ->', out);
 } else if (mode === 'video') {
   const W = +opt('--workers', 4), from = Math.round(+opt('--from', 0) * info.FPS), to = Math.min(info.FRAMES, Math.round(+opt('--to', info.FRAMES / info.FPS) * info.FPS));
@@ -80,7 +89,7 @@ if (mode === 'stills') {
   const wav = out.replace(/\.mp4$/, '') + '.wav';
   if (!existsSync(wav) || process.argv.includes('--reaudio')) await renderAudio(page, wav);
   const ss = String(from / info.FPS), dur = String((to - from) / info.FPS);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', silent, '-ss', ss, '-t', dur, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.84:level=false', '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...mixArgs(silent, wav, ['-ss', ss, '-t', dur]), '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', out]);
   writeFileSync(out.replace(/\.mp4$/, '') + '.cues.json', JSON.stringify(info.CUES.filter(c => c * info.FPS > from && c * info.FPS < to).map(c => +(c - from / info.FPS).toFixed(3))));
   rmSync(tmp, { recursive: true });
   console.log(`video -> ${out}  (${to - from} frames in ${((Date.now() - t0) / 1000).toFixed(0)}s)`);

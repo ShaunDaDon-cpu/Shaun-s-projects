@@ -1,5 +1,6 @@
 // Timed captions: words pop in one at a time, the current word highlighted.
 // Side characters get a name tag (with how the line is said); shouted lines are big, hot and shaking.
+import { VO } from './vo-timing.js';
 const FONT = 'Fredoka, sans-serif';
 const TAGS = { MOM: '#c77dff', DAD: '#4cc9f0', MAYOR: '#adb5bd', GRANDMA: '#ff8fab' };
 const HOW = { 13: 'whispering', 19: 'whispering', 36: 'whispering', 39: 'out loud', 41: 'out loud', 43: 'shouting', 49: 'whispering' };
@@ -10,16 +11,19 @@ function wrap(ctx, words, maxW) {
   for (const word of words) { const ww = ctx.measureText(word).width; if (lines.at(-1).length && w + space + ww > maxW) { lines.push([]); w = 0; } w += (lines.at(-1).length ? space : 0) + ww; lines.at(-1).push(word); }
   return lines;
 }
-function wordTimes(words, dur, fast) {
-  const total = Math.min(dur * .8, words.length * (fast ? .1 : .3)), weights = words.map(w => w.length + 2), sum = weights.reduce((a, b) => a + b);
-  let acc = 0; return weights.map(wt => { const s = acc / sum * total; acc += wt; return s; });
+// word onsets follow the voiceover: spread over the spoken length, weighted by syllables, with pauses at punctuation
+const syl = w => Math.max(1, (w.toLowerCase().replace(/[^a-z]/g, '').replace(/e$/, '').match(/[aeiouy]+/g) || []).length);
+function wordTimes(words, dur, fast, n) {
+  const [off, len] = VO[n] || [0, Math.min(dur * .8, words.length * (fast ? .1 : .3))];
+  const weights = words.map((w, i) => syl(w) + (i && /[,.!?]$/.test(words[i - 1]) ? 1.2 : 0)), sum = weights.reduce((a, b) => a + b);
+  let acc = 0; return weights.map(wt => { acc += wt; return off + (acc - wt) / sum * len * .92; });
 }
 
 export function drawCaption(ctx, L, t, W, H) {
   if (!L.text) return;
   const shout = L.style === 'shout', side = L.style === 'side';
   const words = L.text.split(' ');
-  const times = wordTimes(words, L.dur, shout);
+  const times = wordTimes(words, L.dur, shout, L.n);
   const size = shout ? 118 : 80;
   ctx.save();
   ctx.font = `700 ${size}px ${FONT}`; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
