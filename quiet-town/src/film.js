@@ -363,7 +363,7 @@ S[11] = (t, u) => { // mom adds a second pillow
   cam([403, 6.8, 2.5], [396, 3.6, -5], [402.2, 6.4, 1.5], [396, 3.6, -5], ease(u), 42);
 };
 S[12] = (t, u) => { // they call me Foghorn
-  C.kid.at(30, 0, -40.5, 0).face(talk('sad', mouthAt(12, t))); C.kid.head.rotation.x = .15;
+  C.kid.at(30, 0, -40.5, 0).face('sad'); C.kid.head.rotation.x = .15;
   kids.slice(0, 4).forEach((k, i) => { k.at(27.2 + i * 1.9, 0, -45 - (i % 2), 0).face(i % 2 ? 'happy' : 'smug'); k.point('r', .1); if (i % 2) k.cup('l'); k.body.position.y = Math.abs(Math.sin(t * 12 + i)) * .12; k.body.rotation.z = Math.sin(t * 10 + i) * .05; });
   cam([30.6, 3.9, -34.6], [30.1, 3.4, -41], [30.4, 3.7, -35.6], [30.1, 3.3, -41], ease(u), 42);
   env.shadowAt = new THREE.Vector3(30, 0, -42); env.shadowSpan = 14;
