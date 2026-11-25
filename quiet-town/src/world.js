@@ -1,6 +1,7 @@
 // World builders: blocky R6-style characters, the town under the mountain, the dam, and interior sets.
 import * as THREE from 'three';
 import { faceTexture, FACE_ARC } from './faces.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // ---------- deterministic random ----------
 export function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = Math.imul(s ^ (s >>> 15), 2246822507) ^ Math.imul(s ^ (s >>> 13), 3266489909), (s >>> 0) % 100000) / 100000); }
@@ -36,10 +37,21 @@ function frontTex(kind, color) {
 }
 
 // ---------- shared geometry ----------
+// rounded "classic" head: a cylinder with softened top and bottom edges
+function headGeo(R = .62, H = 1.2, r = .16) {
+  const pts = [new THREE.Vector2(0, -H / 2)];
+  for (let i = 0; i <= 6; i++) { const a = -Math.PI / 2 + i / 6 * Math.PI / 2; pts.push(new THREE.Vector2(R - r + Math.cos(a) * r, -H / 2 + r + Math.sin(a) * r)); }
+  for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI / 2; pts.push(new THREE.Vector2(R - r + Math.cos(a) * r, H / 2 - r + Math.sin(a) * r)); }
+  pts.push(new THREE.Vector2(0, H / 2));
+  return new THREE.LatheGeometry(pts, 32);
+}
 const G = {
-  limb: new THREE.BoxGeometry(1, 2, 1),
-  torso: new THREE.BoxGeometry(2, 2, 1),
-  head: new THREE.CylinderGeometry(.62, .62, 1.2, 28),
+  limb: new RoundedBoxGeometry(1, 2, 1, 3, .09),
+  torso: new RoundedBoxGeometry(2, 2, 1, 3, .09),
+  hand: new RoundedBoxGeometry(1.03, .5, 1.03, 2, .08),
+  shoe: new RoundedBoxGeometry(1.06, .42, 1.16, 2, .12),
+  belt: new RoundedBoxGeometry(2.04, .17, 1.04, 2, .06),
+  head: headGeo(),
   face: new THREE.CylinderGeometry(.632, .632, 1.2, 28, 1, true, -FACE_ARC / 2, FACE_ARC),
   box: new THREE.BoxGeometry(1, 1, 1),
 };
@@ -52,7 +64,7 @@ export function box(w, h, d, color, x = 0, y = 0, z = 0, opts = {}) {
 
 // ---------- characters ----------
 export class Char {
-  constructor({ name, skin = '#f5c542', shirt = '#3a86ff', shirtPattern, shirtFront, pants = '#264653', pantsPattern, hair = 'messy', hairColor = '#5a3a1e', face = 'smile', features = {}, hat, scale = 1, earmuffs = false, sash = false }) {
+  constructor({ name, skin = '#f5c542', shirt = '#3a86ff', shirtPattern, shirtFront, pants = '#264653', pantsPattern, hair = 'messy', hairColor = '#5a3a1e', face = 'smile', features = {}, hat, scale = 1, earmuffs = false, sash = false, shoes = '#2b2d42', belt = '#2b2118' }) {
     this.name = name; this.baseFace = face; this.features = features; this.scale = scale;
     const g = this.group = new THREE.Group(); g.name = name;
     this.body = new THREE.Group(); g.add(this.body);           // body bob / lean lives here
@@ -68,13 +80,16 @@ export class Char {
     this.lArm = part(G.limb, shirtM, -1.5, 3.75, 0, 0, -.75, 0);
     this.rArm = part(G.limb, shirtM, 1.5, 3.75, 0, 0, -.75, 0);
     // hands: skin cap at the end of each arm
-    for (const a of [this.lArm, this.rArm]) { const h = new THREE.Mesh(G.box, skinM); h.scale.set(1.02, .5, 1.02); h.position.y = -1.55; a.add(h); a.hand = new THREE.Group(); a.hand.position.y = -1.8; a.add(a.hand); }
+    for (const a of [this.lArm, this.rArm]) { const h = new THREE.Mesh(G.hand, skinM); h.position.y = -1.55; h.castShadow = true; a.add(h); a.hand = new THREE.Group(); a.hand.position.y = -1.8; a.add(a.hand); }
+    // shoes and a belt: small details that read as a dressed avatar
+    if (shoes) for (const l of [this.lLeg, this.rLeg]) { const sh = new THREE.Mesh(G.shoe, mat(shoes)); sh.position.set(0, -1.8, .05); sh.castShadow = true; l.add(sh); }
+    if (belt) { const b = new THREE.Mesh(G.belt, mat(belt)); b.position.y = -.92; this.torso.add(b); }
     if (sash) { const s = box(.25, 2.9, 1.08, '#c1121f', 0, 0, 0, { cast: false }); s.rotation.z = .78; this.torso.add(s); const b = box(.5, .5, .2, '#ffd166', .3, .2, .58); this.torso.add(b); }
     this.head = new THREE.Group(); this.head.position.set(0, 4, 0); this.body.add(this.head);
     const hm = new THREE.Mesh(G.head, skinM); hm.position.y = .6; hm.castShadow = true; this.head.add(hm);
     this.faceMat = new THREE.MeshLambertMaterial({ transparent: true, map: faceTexture(face, features), depthWrite: false });
     this.faceMesh = new THREE.Mesh(G.face, this.faceMat); this.faceMesh.position.y = .6; this.head.add(this.faceMesh);
-    this.hairGroup = new THREE.Group(); this.head.add(this.hairGroup); this.buildHair(hair, mat(hairColor));
+    this.hairGroup = new THREE.Group(); this.head.add(this.hairGroup); this.buildHair(hair, hairColor, !!hat);
     if (hat === 'top') { this.hat = new THREE.Group(); this.hat.add(box(1.7, .12, 1.7, '#151515', 0, 0, 0), box(1.2, 1.3, 1.2, '#151515', 0, .7, 0), box(1.22, .25, 1.22, '#8d0801', 0, .25, 0)); this.hat.position.y = 1.25; this.head.add(this.hat); }
     if (hat === 'cap') { this.hat = new THREE.Group(); this.hat.add(box(1.35, .45, 1.35, '#e63946', 0, 0, 0), box(1.2, .1, .7, '#e63946', 0, -.18, .9)); this.hat.position.y = 1.3; this.head.add(this.hat); }
     if (hat === 'nurse') { this.hat = new THREE.Group(); this.hat.add(box(1.1, .45, .5, '#ffffff', 0, 0, .2), box(.3, .25, .05, '#e63946', 0, 0, .46)); this.hat.position.y = 1.3; this.head.add(this.hat); }
@@ -83,15 +98,59 @@ export class Char {
     this.props = [];
     this.reset();
   }
-  buildHair(kind, m) {
-    const H = this.hairGroup, add = (...a) => { const b = box(...a); b.material = m; H.add(b); return b; };
-    if (kind === 'messy') { add(1.36, .35, 1.36, 0, 0, 1.28, 0); for (const [x, z, h, r] of [[-.45, .45, .5, .3], [.1, .55, .6, -.2], [.5, .2, .45, .4], [-.3, -.3, .55, -.3], [.4, -.45, .5, .2]]) { const b = add(.45, h, .45, 0, x, 1.45, z); b.rotation.set(r, r, r * .5); } add(1.38, .7, .4, 0, 0, .95, -.55); add(.35, .55, .9, 0, -.62, .95, 0); add(.35, .55, .9, 0, .62, .95, 0); }
-    if (kind === 'short') { add(1.36, .3, 1.36, 0, 0, 1.27, 0); add(1.38, .2, .3, 0, 0, 1.15, .58); add(1.38, .7, .35, 0, 0, .95, -.55); add(.3, .4, 1.0, 0, -.62, 1.0, -.1); add(.3, .4, 1.0, 0, .62, 1.0, -.1); }
-    if (kind === 'long') { add(1.4, .35, 1.4, 0, 0, 1.28, 0); add(1.45, 1.9, .45, 0, 0, .45, -.55); add(.38, 1.5, 1.1, 0, -.66, .65, -.1); add(.38, 1.5, 1.1, 0, .66, .65, -.1); add(1.3, .28, .3, 0, 0, 1.12, .58); }
-    if (kind === 'bun') { add(1.36, .3, 1.36, 0, 0, 1.25, 0); add(1.36, .6, .35, 0, 0, .95, -.55); const b = add(.75, .6, .75, 0, 0, 1.65, -.1); b.rotation.y = .78; }
-    if (kind === 'pony') { add(1.36, .32, 1.36, 0, 0, 1.27, 0); add(1.38, .6, .35, 0, 0, .95, -.55); const p = add(.45, 1.1, .45, 0, 0, .7, -.85); p.rotation.x = .3; }
-    if (kind === 'fringe') { add(1.38, .4, 1.38, 0, 0, 1.25, 0); add(1.4, .38, .3, 0, 0, 1.0, .58); add(1.38, .8, .35, 0, 0, .9, -.55); }
-    if (kind === 'baby') { const b = add(.3, .35, .3, 0, 0, 1.38, .2); b.rotation.z = .4; }
+  // layered, glossy, accessory-style hair (head-local: head centre y .6, radius .62, crown at 1.2;
+  // the face spans the front ±75 degrees between y ~.25 and ~.95, so hair stays clear of it)
+  buildHair(kind, color, hatted) {
+    const H = this.hairGroup, m = new THREE.MeshStandardMaterial({ color, roughness: .38, metalness: 0 });
+    const mesh = (geo, x, y, z, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = true; H.add(o); return o; };
+    const rb = (w, h, d, rad = .1) => new RoundedBoxGeometry(w, h, d, 3, rad);
+    const dome = (r = .7, sy = .9) => { const d = mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI * .33), 0, .7, 0); d.scale.y = sy; return d; };
+    const band = (y0, y1, r = .685) => { const g = new THREE.CylinderGeometry(r, r, y1 - y0, 32, 1, true, 1.25, Math.PI * 2 - 2.5); const b = mesh(g, 0, (y0 + y1) / 2, 0); b.material = m.clone(); b.material.side = THREE.DoubleSide; return b; };
+    const cone = (r, h) => new THREE.ConeGeometry(r, h, 7);
+    if (hatted) { band(.55, 1.1); if (kind === 'fringe') mesh(rb(1.22, .26, .28, .1), 0, 1.06, .5); return; }
+    if (kind === 'messy') {                       // spiky, tousled
+      dome(.71, .95); band(.8, 1.15, .68);
+      for (const [a, tilt, len] of [[0, .55, .62], [.8, .7, .55], [-.8, .7, .55], [1.7, .8, .5], [-1.7, .8, .5], [2.5, .9, .5], [-2.5, .9, .5], [3.14, .8, .55], [.4, .25, .5], [-.4, .3, .48]]) {
+        const sp = mesh(cone(.22, len), Math.sin(a) * .38, 1.32, Math.cos(a) * .38); sp.rotation.set(Math.cos(a) * tilt, 0, -Math.sin(a) * tilt);
+      }
+      for (const x of [-.32, 0, .3]) mesh(cone(.2, .42), x, 1.12, .58, 2.25, 0, x * .6);   // fringe tips falling forward over the forehead
+    }
+    if (kind === 'short') {                       // neat sides with a swept-up quiff
+      dome(.7, .85); band(.68, 1.12);
+      mesh(rb(1.08, .38, .62, .17), .08, 1.3, .3, -.45, 0, -.12);
+      mesh(rb(.72, .3, .5, .14), -.28, 1.18, .48, -.7, 0, .2);
+    }
+    if (kind === 'long') {                        // long, side-parted
+      dome(.73, .95); band(.15, 1.15, .7);
+      mesh(rb(1.46, 1.75, .5, .22), 0, .18, -.5);
+      for (const sx of [-1, 1]) mesh(rb(.34, 1.45, .74, .16), sx * .74, .38, .06);
+      mesh(rb(1.02, .32, .36, .14), -.2, 1.13, .5, .25, 0, .32);       // swept fringe
+      mesh(rb(.5, .28, .3, .12), .38, 1.16, .46, .2, 0, -.2);
+    }
+    if (kind === 'bun') {                         // silver curls and a bun
+      const curl = new THREE.SphereGeometry(.2, 12, 10);
+      for (let row = 0; row < 4; row++) for (let k = 0; k < 14; k++) {
+        const a = k / 14 * Math.PI * 2 + row * .22, y = 1.22 - row * .17, r = .5 + row * .07;
+        if (Math.cos(a) > .3 && y < 1.1) continue;                      // keep the face clear
+        mesh(curl, Math.sin(a) * r, y, Math.cos(a) * r);
+      }
+      mesh(new THREE.SphereGeometry(.42, 20, 14), 0, 1.15, 0).scale.set(1.2, .55, 1.2);
+      for (const [x, y, z] of [[0, 1.62, -.12], [.18, 1.55, -.02], [-.18, 1.55, -.02], [0, 1.52, -.28], [0, 1.74, -.1]]) mesh(new THREE.SphereGeometry(.26, 16, 12), x, y, z);
+    }
+    if (kind === 'pony') {                        // high ponytail with a hair tie
+      dome(.71, .92); band(.6, 1.15);
+      mesh(rb(1.1, .3, .4, .14), -.12, 1.15, .45, .3, 0, .28);
+      const tie = mesh(new THREE.TorusGeometry(.16, .06, 8, 16), 0, 1.22, -.62, .6); tie.material = mat('#e63946');
+      mesh(new THREE.CapsuleGeometry(.2, .9, 6, 12), 0, .78, -.92, .45);
+      mesh(new THREE.SphereGeometry(.18, 12, 10), 0, .3, -1.12);
+    }
+    if (kind === 'fringe') {                      // a bob with straight bangs
+      dome(.72, .92); band(.32, 1.15, .7);
+      mesh(rb(1.26, .3, .32, .12), 0, 1.07, .48);
+      for (const sx of [-1, 1]) mesh(rb(.3, .82, .66, .15), sx * .72, .62, .12, 0, 0, sx * -.08);
+      mesh(rb(1.4, .6, .4, .18), 0, .55, -.55);
+    }
+    if (kind === 'baby') mesh(new THREE.TorusGeometry(.13, .055, 8, 16, Math.PI * 1.5), 0, 1.3, .15, 0, 0, .8);
   }
   reset() {
     this.group.visible = false; this.group.position.set(0, 0, 0); this.group.rotation.set(0, 0, 0); this.group.scale.setScalar(this.scale);
