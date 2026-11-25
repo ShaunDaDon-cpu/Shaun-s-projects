@@ -104,10 +104,15 @@ export class Char {
     const H = this.hairGroup, m = new THREE.MeshStandardMaterial({ color, roughness: .38, metalness: 0 });
     const mesh = (geo, x, y, z, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = true; H.add(o); return o; };
     const rb = (w, h, d, rad = .1) => new RoundedBoxGeometry(w, h, d, 3, rad);
-    const dome = (r = .7, sy = .9) => { const d = mesh(new THREE.SphereGeometry(r, 32, 16, 0, Math.PI * 2, 0, Math.PI * .33), 0, .7, 0); d.scale.y = sy; return d; };
-    const band = (y0, y1, r = .685) => { const g = new THREE.CylinderGeometry(r, r, y1 - y0, 32, 1, true, 1.25, Math.PI * 2 - 2.5); const b = mesh(g, 0, (y0 + y1) / 2, 0); b.material = m.clone(); b.material.side = THREE.DoubleSide; return b; };
+    // fitted shell: follows the head's own profile, a little larger, so no scalp pokes through
+    const R = .7, TOP = 1.28, RC = .26, HAIRLINE = 1.0, OPEN = .82;          // OPEN: half-angle of the face opening below the hairline
+    const ds = m.clone(); ds.side = THREE.DoubleSide;
+    const shell = (pts, ph0 = 0, phL = Math.PI * 2) => { const o = new THREE.Mesh(new THREE.LatheGeometry(pts, 40, ph0, phL), ds); o.castShadow = true; H.add(o); return o; };
+    const capPts = () => { const p = [new THREE.Vector2(R, HAIRLINE - .02)]; for (let i = 0; i <= 8; i++) { const a = i / 8 * Math.PI / 2; p.push(new THREE.Vector2(R - RC + Math.cos(a) * RC, TOP - RC + Math.sin(a) * RC)); } p.push(new THREE.Vector2(0, TOP)); return p; };
+    const dome = () => shell(capPts());                                                  // crown, all the way round down to the hairline
+    const band = (y0, y1, r = R) => shell([new THREE.Vector2(r + .02, y0), new THREE.Vector2(r, HAIRLINE + .02)], OPEN, Math.PI * 2 - OPEN * 2);   // sides and back, wrapping forward to the face
     const cone = (r, h) => new THREE.ConeGeometry(r, h, 7);
-    if (hatted) { band(.55, 1.1); if (kind === 'fringe') mesh(rb(1.22, .26, .28, .1), 0, 1.06, .5); return; }
+    if (hatted) { dome(); band(.55, 1.1); if (kind === 'fringe') mesh(rb(1.22, .26, .28, .1), 0, 1.06, .5); return; }
     if (kind === 'messy') {                       // spiky, tousled
       dome(.71, .95); band(.8, 1.15, .68);
       for (const [a, tilt, len] of [[0, .55, .62], [.8, .7, .55], [-.8, .7, .55], [1.7, .8, .5], [-1.7, .8, .5], [2.5, .9, .5], [-2.5, .9, .5], [3.14, .8, .55], [.4, .25, .5], [-.4, .3, .48]]) {
@@ -128,6 +133,7 @@ export class Char {
       mesh(rb(.5, .28, .3, .12), .38, 1.16, .46, .2, 0, -.2);
     }
     if (kind === 'bun') {                         // silver curls and a bun
+      dome(); band(.62, 1.1);
       const curl = new THREE.SphereGeometry(.2, 12, 10);
       for (let row = 0; row < 4; row++) for (let k = 0; k < 14; k++) {
         const a = k / 14 * Math.PI * 2 + row * .22, y = 1.22 - row * .17, r = .5 + row * .07;
