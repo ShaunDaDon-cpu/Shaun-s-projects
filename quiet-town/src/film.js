@@ -119,6 +119,22 @@ function shockwave(pos, t0, t, { speed = 30, count = 3, gap = .12, life = .8, co
   for (let k = 0; k < count; k++) { const a = t - t0 - k * gap; if (a < 0 || a > life) continue; ring(k, pos, .5 + a * speed, .85 * (1 - a / life), color); }
 }
 
+// sleepy Z's: sprites that always face the camera
+const zTex = ['Z', 'z'].map(ch => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.font = '700 110px Fredoka, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineWidth = 16; x.strokeStyle = '#2b2d6e'; x.strokeText(ch, 64, 68); x.fillStyle = '#ffffff'; x.fillText(ch, 64, 68); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; });
+const zs = Array.from({ length: 15 }, (_, i) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: zTex[i % 2], transparent: true, depthWrite: false, fog: false })); sp.renderOrder = 10; scene.add(sp); return sp; });
+function sleepyZs(t, mouths) {   // three Z's per mouth, each rising, swaying and fading on its own loop
+  let i = 0;
+  mouths.forEach((m, b) => { for (let k = 0; k < 3; k++) {
+    const sp = zs[i++]; if (!sp) return;
+    const p = ((t * .85 + k / 3 + b * .29) % 1);
+    sp.visible = true;
+    sp.position.set(m.x + p * .9 + Math.sin(p * 7 + k) * .25, m.y + .3 + p * 3.4, m.z - p * .8);
+    sp.scale.setScalar((.45 + p * .75) * (k % 2 ? .8 : 1));
+    sp.material.opacity = p < .15 ? p / .15 : p > .65 ? Math.max(0, 1 - (p - .65) / .35) : 1;
+    sp.material.rotation = Math.sin(p * 5 + k) * .3;
+  } });
+}
+
 // ---------- helpers ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
@@ -198,6 +214,7 @@ function resetAll(t) {
   for (const d of DYN) { d.visible = false; d.position.set(0, 0, 0); d.rotation.set(0, 0, 0); d.scale.setScalar(1); }
   scene.add(stroller, cone, mound); kidFlag.scale.setScalar(1.3);
   for (const r of rings) r.visible = false;
+  for (const z of zs) z.visible = false;
   pN = 0; medal.visible = false;
   T.group.visible = true; stadium.visible = false; for (const r of Object.values(R)) r.visible = false;
   pillow2.visible = false;
@@ -264,6 +281,7 @@ S[4] = (t, u) => { // stadium: silent jazz-hands cheering
 S[5] = (t, u) => { // nursery: babies in earmuffs
   inRoom(R.nursery, 'roomDay');
   babies.forEach((b, i) => { lieDown(b, 520, 2.75, [7, 0, -7][i] + 1.3); b.head.rotation.z = Math.sin(t * 2 + i) * .1; });
+  sleepyZs(t, [7, 0, -7].map(z => new THREE.Vector3(520, 3.2, z + .3)));
   cam([523, 17, 12], [520, 2.5, -1], [522, 15, 9.5], [520, 2.5, -1], ease(u), 44);
 };
 S[6] = (t, u) => { // school bell is a flag
