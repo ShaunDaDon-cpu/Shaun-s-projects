@@ -30,6 +30,7 @@ curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-fil
 curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
 node -e "import('./src/script.js').then(m=>require('fs').writeFileSync('out/lines.json', JSON.stringify(m.LINES.map(l=>({n:l.n,text:l.text,who:l.who||'',style:l.style,start:l.start,dur:l.dur})))))"
 python tools/voiceover.py kokoro-v1.0.onnx voices-v1.0.bin   # -> out/vo.wav + src/vo-timing.js
+python tools/mouth.py                                          # -> src/vo-mouth.js (lip-sync from the voice)
 ```
 
 Cast: the kid af_heart (+1 semitone), Mom af_nicole, Dad am_michael, Mayor bm_george, Grandma bf_emma (−2 semitones). Each line is fitted into its shot; the captions pop words in time with it, and the score is ducked under the voice in the final mix. To use your own recording instead, replace `out/vo.wav` (same timing) and run `node tools/render.mjs remux out/quiet-town.mp4`.

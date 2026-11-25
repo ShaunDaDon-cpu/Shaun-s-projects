@@ -58,6 +58,10 @@ function draw(ctx, expr, f) {
     case 'sleep': curve(ctx, L - 32, ey, L, ey + 26, L + 32, ey, 14); curve(ctx, R - 32, ey, R, ey + 26, R + 32, ey, 14); mouthOpen(ctx, cx, my + 6, 22, 18, { tongue: false }); break;
     case 'halfsleep': line(ctx, [[L - 32, ey], [L + 32, ey]], 14); line(ctx, [[R - 32, ey], [R + 32, ey]], 14); ctx.fillStyle = INK; ctx.fillRect(L - 26, ey, 52, 18); ctx.fillRect(R - 26, ey, 52, 18); mouthOpen(ctx, cx + 10, my + 6, 26, 14, { tongue: false }); break;
     case 'whisper': E(); lash(); brows(ctx, cx, ey, 'up'); mouthOpen(ctx, cx, my + 4, 20, 22, { tongue: false }); break;
+    // whisper mouth shapes for lip-sync: closed, small, open (eyes glancing sideways, brows up: secretive)
+    case 'whisper0': E({ look: 1 }); lash(); brows(ctx, cx, ey, 'up'); curve(ctx, cx - 26, my + 6, cx, my + 12, cx + 26, my + 6, 11); break;
+    case 'whisper1': E({ look: 1 }); lash(); brows(ctx, cx, ey, 'up'); mouthOpen(ctx, cx, my + 6, 22, 16, { tongue: false }); break;
+    case 'whisper2': E({ look: 1 }); lash(); brows(ctx, cx, ey, 'up'); mouthOpen(ctx, cx, my + 8, 30, 30, { tongue: false }); break;
     case 'smug': line(ctx, [[L - 32, ey - 4], [L + 32, ey - 4]], 14); line(ctx, [[R - 32, ey - 4], [R + 32, ey - 4]], 14); ctx.fillStyle = INK; ctx.fillRect(L - 26, ey - 4, 52, 22); ctx.fillRect(R - 26, ey - 4, 52, 22); curve(ctx, cx - 50, my + 10, cx + 20, my + 30, cx + 70, my - 14); break;
     case 'worried': E({ r: 30, ry: 40 }); lash(); brows(ctx, cx, ey, 'sad'); line(ctx, [[cx - 60, my + 10], [cx - 30, my - 4], [cx, my + 10], [cx + 30, my - 4], [cx + 60, my + 10]], 12); break;
     case 'deadpan': line(ctx, [[L - 32, ey], [L + 32, ey]], 14); line(ctx, [[R - 32, ey], [R + 32, ey]], 14); ctx.fillStyle = INK; ctx.fillRect(L - 26, ey, 52, 20); ctx.fillRect(R - 26, ey, 52, 20); lash(); line(ctx, [[cx - 46, my + 8], [cx + 46, my + 8]]); break;

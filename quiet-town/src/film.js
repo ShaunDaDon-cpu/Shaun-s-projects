@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { LINES, FPS, FRAMES, CUES, DURATION, shotAt } from './script.js';
 import { Char, buildTown, room, bed, crib, rockingChair, box, mat, rng, flagProp, knitProp, paperProp, medalProp, pillow, signTex } from './world.js';
 import { drawCaption, drawEndCard } from './captions.js';
+import { VO } from './vo-timing.js';
+import { MOUTH } from './vo-mouth.js';
 
 export const W = 1080, H = 1920;
 
@@ -344,9 +346,13 @@ S[12] = (t, u) => { // they call me Foghorn
 };
 S[13] = (t, u) => { // MOM: use your inside voice
   inRoom(R.dining);
-  seatOn(C.mom, 474.5, 2.0, -3, Math.PI / 2).face('whisper').shush(); C.mom.head.rotation.z = .1;
+  // whispering: hand cupped at the side of her mouth, mouth lip-synced to the voice
+  const mi = Math.floor((t - VO[13][0]) * FPS), m = MOUTH[13][mi];
+  seatOn(C.mom, 474.5, 2.0, -3, Math.PI / 2).face('whisper' + (m ?? '0'));
+  C.mom.rArm.rotation.set(-1.76, 0, -.48);                       // right hand cupped at the side of her mouth
+  C.mom.head.rotation.z = -.1; C.mom.head.rotation.y = -.12; C.mom.body.rotation.z = .04 + Math.sin(t * 3) * .015;
   seatOn(C.kid, 485.5, 2.0, -3, -Math.PI / 2).face('pout');
-  cam([479, 5.4, 0], [474.6, 4.6, -3], [478.4, 5.3, -.6], [474.6, 4.6, -3], ease(u), 38);
+  cam([481.6, 5.5, -1.2], [474.6, 4.2, -3.1], [481, 5.4, -1.45], [474.6, 4.2, -3.1], ease(u), 38);
 };
 S[14] = (t, u) => { // I don't have an inside voice
   inRoom(R.dining);
