@@ -86,6 +86,11 @@ export function SCORE(ac, offset = 0) {
     for (let e = 0; e < 8; e++) { const te = t + e * BEAT / 2; if (te >= A1) break; if (e % 2) shaker(te); if (mel[e]) { pluck(te, N(mel[e]), .13, -.2, .25); if (bar >= 2) bell(te, N(mel[e]) * 2, .028, .3, .8); } }
   }
   pad(A0, A1 - A0, [N('F3'), N('A3'), N('C4')], .018, 700);
+  // shot 2: the imagined avalanche: the music sinks under a crack, a rumble and a roar, then snaps back at the cut
+  music.gain.setValueAtTime(1, at(s(2) + d(2) * .28)); music.gain.linearRampToValueAtTime(.3, at(s(2) + d(2) * .5)); music.gain.setValueAtTime(.3, at(s(3) - .02)); music.gain.linearRampToValueAtTime(1, at(s(3)));
+  crackSfx(s(2) + d(2) * .28, .32); rumble(s(2) + d(2) * .3, d(2) * .68, .6); roar(s(2) + d(2) * .4, d(2) * .58, .32);
+  whoosh(s(2) + d(2) * .8, d(2) * .2, 400, 5000, .3);
+  sfx.gain.setValueAtTime(1, at(s(3) - .02)); sfx.gain.linearRampToValueAtTime(0, at(s(3) + .01)); sfx.gain.setValueAtTime(0, at(s(3) + .4)); sfx.gain.linearRampToValueAtTime(1, at(s(3) + .45));
   // gags
   bell(s(4) + .05, N('C6'), .05, .4); bell(s(4) + .25, N('E6'), .05, -.4); bell(s(4) + .45, N('G6'), .05, .4);   // jazz-hand sparkle
   bell(s(5) + .05, N('A5'), .05, 0, 2);                                                                         // lullaby ding

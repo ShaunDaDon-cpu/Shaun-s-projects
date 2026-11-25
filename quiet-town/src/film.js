@@ -205,7 +205,7 @@ function applyEnv() {
     }
     rain.instanceMatrix.needsUpdate = true;
   }
-  parts.count = pN; parts.instanceMatrix.needsUpdate = true; if (parts.instanceColor) parts.instanceColor.needsUpdate = true;
+  parts.material.emissive.set(e.partGlow || '#2a3040'); parts.count = pN; parts.instanceMatrix.needsUpdate = true; if (parts.instanceColor) parts.instanceColor.needsUpdate = true;
   // camera shake
   if (e.shake) { const s = e.shake, t = e.t; camera.position.x += (Math.sin(t * 61) + Math.sin(t * 37)) * .5 * s; camera.position.y += (Math.sin(t * 53) + Math.sin(t * 29)) * .5 * s; lookAt.x += Math.sin(t * 47) * .5 * s; lookAt.y += Math.sin(t * 43) * .5 * s; }
   camera.aspect = W / H; camera.lookAt(lookAt); camera.updateProjectionMatrix();
@@ -213,7 +213,7 @@ function applyEnv() {
 }
 
 function resetAll(t) {
-  env = { t, mode: 'day', rain: 0, flash: 0, shake: 0, windows: false, lamps: false, shadowSpan: 50, shadowAt: null, dawn: 0 };
+  env = { t, mode: 'day', rain: 0, flash: 0, shake: 0, windows: false, lamps: false, shadowSpan: 50, shadowAt: null, dawn: 0, whiteout: 0 };
   for (const c of ALL) c.reset();
   dress(C.kid, false); dress(C.dad, false);
   for (const d of DYN) { d.visible = false; d.position.set(0, 0, 0); d.rotation.set(0, 0, 0); d.scale.setScalar(1); }
@@ -265,10 +265,31 @@ S[1] = (t, u) => { // town sign with the rule
   C.neighA.at(3, 0, 30, Math.PI).walk(t * 6 + 1, .4);
   env.shadowAt = new THREE.Vector3(5, 0, 40);
 };
-S[2] = (t, u) => { // tilt up to the snow wall on the mountain
-  cam([4, 4, 26], [0, 12, -60], [4, 4, 26], [-14, 118, -230], ease(u), 50);
+S[2] = (t, u) => { // "one loud noise, and the mountain comes down": the imagined avalanche, ending in a whiteout
+  const CAM = [4, 4, 26], top = new THREE.Vector3(-14, 118, -226);
+  const crack = seg(u, .28, .42), w = Math.pow(seg(u, .38, .93), 1.25);           // w: how far the snow has come, 0 at the cornice, 1 at the camera
+  // path: down the mountain face to its base, then rolling across town at rooftop height toward the camera
+  const base = new THREE.Vector3(-6, 10, -140), end = new THREE.Vector3(CAM[0], CAM[1] + 2, CAM[2] - 2);
+  const path = (k, o = new THREE.Vector3()) => { const a = 1 - k; return o.set(a * a * top.x + 2 * a * k * base.x + k * k * end.x, a * a * top.y + 2 * a * k * base.y + k * k * end.y, a * a * top.z + 2 * a * k * base.z + k * k * end.z); };
+  const front = path(w);
+  // camera: tilt up to the snow wall, hold as it cracks, then follow the wave down at us
+  if (u < .38) cam(CAM, [0, 12, -60], CAM, [top.x, top.y, top.z], ease(seg(u, 0, .28)), 50);
+  else { const ahead = front.clone().add(new THREE.Vector3(0, 4, -30).multiplyScalar(1 - w)).add(new THREE.Vector3(0, 0, -22)); const k = ease(seg(u, .38, .6)); cam(CAM, [top.x, top.y, top.z], CAM, [ahead.x, ahead.y, ahead.z], k, 52); }
+  // the cornice tips and slides out
+  T.cornice.rotation.x = crack * .3; T.cornice.position.set(-20, 130 - crack * 6 - w * 40, 69 + crack * 6 + w * 30); T.cornice.visible = w < .25;
+  // falling crumbs before it goes
   for (let i = 0; i < 30; i++) { const r = rng(i + 90); const a = ((t * .5 + r()) % 1); P(-20 + (r() - .5) * 120, 124 - a * 30, -220 + r() * 4, 1.2 + r(), '#ffffff', i); }
-  env.shadowAt = new THREE.Vector3(0, 0, 0);
+  // the avalanche: a wall of snow chunks and powder from the cornice to the front, widening as it comes
+  if (w > 0) for (let i = 0; i < 1500; i++) {
+    const r = rng(i * 7 + 11); const s = w * (1 - r() * .55); if (s <= 0) continue;
+    const p = path(s);
+    const width = 40 + s * 150, lead = Math.max(0, 1 - (w - s) * 4);              // chunks near the front are big and billowing
+    const near = Math.max(0, 1 - p.distanceTo(camera.position) / 60);
+    P(p.x + (r() - .5) * width, p.y + r() * (6 + 26 * lead) - 2, p.z + (r() - .5) * 14, (1.5 + r() * 4) * (1 + lead * 1.5) * (1 + near * 2), r() < .25 ? '#e6eeff' : '#ffffff', r() * 9 + t * 2);
+  }
+  env.shake = u < .28 ? 0 : .15 + w * .9; env.partGlow = '#a7b4cc';
+  env.whiteout = seg(u, .86, .99);
+  env.shadowAt = new THREE.Vector3(0, 0, 0); env.shadowSpan = 70;
 };
 S[3] = (t, u) => { // neighbours whispering over the fence
   C.neighA.at(-11.6, 0, 22, Math.PI / 2).cup('r'); C.neighA.face('whisper'); C.neighA.body.rotation.z = -.15; C.neighA.head.rotation.z = -.12;
@@ -650,6 +671,10 @@ export function draw(frame) {
   applyEnv();
   renderer.render(scene, camera);
   ctx.drawImage(renderer.domElement, 0, 0, W, H);
+  if (env.whiteout > 0) {                     // snow covers the lens
+    ctx.fillStyle = `rgba(246,250,255,${env.whiteout})`; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 90; i++) { const r = rng(i + 777); ctx.fillStyle = `rgba(214,226,245,${env.whiteout * (.3 + r() * .4)})`; const sz = 30 + r() * 160; ctx.beginPath(); ctx.arc(r() * W, (r() * H + t * 900 * (.5 + r())) % H, sz, 0, 7); ctx.fill(); }
+  }
   if (L.endCard) drawEndCard(ctx, lt, L.dur, W, H); else drawCaption(ctx, L, lt, W, H);
 }
 export { FRAMES, FPS, CUES, DURATION };
