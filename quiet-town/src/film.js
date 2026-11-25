@@ -265,30 +265,53 @@ S[1] = (t, u) => { // town sign with the rule
   C.neighA.at(3, 0, 30, Math.PI).walk(t * 6 + 1, .4);
   env.shadowAt = new THREE.Vector3(5, 0, 40);
 };
-S[2] = (t, u) => { // "one loud noise, and the mountain comes down": the imagined avalanche, ending in a whiteout
+S[2] = (t, u) => { // "one loud noise, and the mountain comes down": the imagined avalanche catches a runner and splats her on the lens
   const CAM = [4, 4, 26], top = new THREE.Vector3(-14, 118, -226);
-  const crack = seg(u, .28, .42), w = Math.pow(seg(u, .38, .93), 1.25);           // w: how far the snow has come, 0 at the cornice, 1 at the camera
-  // path: down the mountain face to its base, then rolling across town at rooftop height toward the camera
-  const base = new THREE.Vector3(-6, 10, -140), end = new THREE.Vector3(CAM[0], CAM[1] + 2, CAM[2] - 2);
-  const path = (k, o = new THREE.Vector3()) => { const a = 1 - k; return o.set(a * a * top.x + 2 * a * k * base.x + k * k * end.x, a * a * top.y + 2 * a * k * base.y + k * k * end.y, a * a * top.z + 2 * a * k * base.z + k * k * end.z); };
+  const crack = seg(u, .28, .42), w = Math.pow(seg(u, .38, .74), 1.15);           // w: how far the snow has come, 0 at the cornice, 1 at the camera
+  // path: straight down the mountain face to its base, then straight across town toward the camera
+  const base = new THREE.Vector3(-6, 10, -140), end = new THREE.Vector3(CAM[0], CAM[1] + 2, CAM[2] - 16);
+  const path = (k, o = new THREE.Vector3()) => k < .5 ? o.lerpVectors(top, base, k / .5) : o.lerpVectors(base, end, (k - .5) / .5);
   const front = path(w);
-  // camera: tilt up to the snow wall, hold as it cracks, then follow the wave down at us
+  // camera: tilt up to the snow wall, hold as it cracks, then follow the wave down the street
+  const street = [4, 4.6, -12];
   if (u < .38) cam(CAM, [0, 12, -60], CAM, [top.x, top.y, top.z], ease(seg(u, 0, .28)), 50);
-  else { const ahead = front.clone().add(new THREE.Vector3(0, 4, -30).multiplyScalar(1 - w)).add(new THREE.Vector3(0, 0, -22)); const k = ease(seg(u, .38, .6)); cam(CAM, [top.x, top.y, top.z], CAM, [ahead.x, ahead.y, ahead.z], k, 52); }
+  else cam(CAM, [top.x, top.y, top.z], CAM, street, ease(seg(u, .38, .62)), 52);
   // the cornice tips and slides out
   T.cornice.rotation.x = crack * .3; T.cornice.position.set(-20, 130 - crack * 6 - w * 40, 69 + crack * 6 + w * 30); T.cornice.visible = w < .25;
-  // falling crumbs before it goes
   for (let i = 0; i < 30; i++) { const r = rng(i + 90); const a = ((t * .5 + r()) % 1); P(-20 + (r() - .5) * 120, 124 - a * 30, -220 + r() * 4, 1.2 + r(), '#ffffff', i); }
-  // the avalanche: a wall of snow chunks and powder from the cornice to the front, widening as it comes
+  // the runner (the woman in red from shot 1): sprints at us, is caught, flung, and splats on the lens
+  const her = C.neighA, CATCH = .715, HIT = .79;
+  const fwd = new THREE.Vector3(street[0] - CAM[0], street[1] - CAM[1], street[2] - CAM[2]).normalize();
+  const lens = new THREE.Vector3(...CAM).addScaledVector(fwd, 3.3);
+  if (u >= .4 && u < CATCH) {
+    const z = lerp(-30, 4, seg(u, .4, CATCH));
+    her.at(2.5, 0, z, 0).face(Math.floor(t * 8) % 2 ? 'shout' : 'gasp').walk(t * 22, 1.1); her.armsUp(.8); her.lArm.rotation.x = Math.sin(t * 22) * .8; her.rArm.rotation.x = -Math.sin(t * 22) * .8;
+    her.body.rotation.x = .25; her.head.rotation.y = Math.sin(t * 6) * .25;
+  } else if (u >= CATCH && u < HIT) {               // caught: tumbling through the air at the camera
+    const k = seg(u, CATCH, HIT), from = new THREE.Vector3(2.5, 4.6, 4), to = lens.clone().add(new THREE.Vector3(0, .75, 0)), at = new THREE.Vector3().lerpVectors(from, to, eIn(k));
+    at.y += Math.sin(k * Math.PI) * 3;
+    her.at(at.x, at.y - 4.6, at.z, k * 9).face('shout'); her.group.rotation.x = k * 7; her.armsUp(1); her.lLeg.rotation.x = 1; her.rLeg.rotation.x = -1;
+  } else if (u >= HIT) {                            // splat: face squashed on the glass, dizzy, sliding down
+    const k = seg(u, HIT, .97), slide = eIn(k) * .3 - .75;
+    const bounce = 1 + Math.max(0, Math.sin(seg(u, HIT, HIT + .05) * Math.PI)) * .25;
+    her.at(lens.x, lens.y - 4.6 - slide, lens.z, Math.atan2(-fwd.x, -fwd.z)).face('dizzy');
+    her.head.scale.set(1.22 * bounce, .88 / bounce, .62); her.body.rotation.x = -.12; her.armsUp(.85); her.lArm.rotation.x = her.rArm.rotation.x = -.4;
+    her.head.rotation.z = Math.sin(t * 7) * .05;
+    if (u < HIT + .03) env.flash = 1;
+  }
+  // the avalanche: a wall of snow chunks and powder, widening as it comes; kept clear of the lens once she hits it
   if (w > 0) for (let i = 0; i < 1500; i++) {
     const r = rng(i * 7 + 11); const s = w * (1 - r() * .55); if (s <= 0) continue;
     const p = path(s);
-    const width = 40 + s * 150, lead = Math.max(0, 1 - (w - s) * 4);              // chunks near the front are big and billowing
-    const near = Math.max(0, 1 - p.distanceTo(camera.position) / 60);
-    P(p.x + (r() - .5) * width, p.y + r() * (6 + 26 * lead) - 2, p.z + (r() - .5) * 14, (1.5 + r() * 4) * (1 + lead * 1.5) * (1 + near * 2), r() < .25 ? '#e6eeff' : '#ffffff', r() * 9 + t * 2);
+    const width = 40 + s * 150, lead = Math.max(0, 1 - (w - s) * 4);
+    const x = p.x + (r() - .5) * width, y = p.y + r() * (6 + 26 * lead) - 2, z = p.z + (r() - .5) * 14;
+    const dc = Math.hypot(x - CAM[0], y - CAM[1], z - CAM[2]);
+    if (dc < 9 || (u >= CATCH - .04 && z > CAM[2] - 22 && Math.abs(x - CAM[0]) < 7 && Math.abs(y - CAM[1]) < 6)) continue;   // a clear tunnel to the lens
+    const near = Math.max(0, 1 - dc / 60) * .5;
+    P(x, y, z, (1.5 + r() * 4) * (1 + lead * 1.5) * (1 + near * 2), r() < .25 ? '#e6eeff' : '#ffffff', r() * 9 + t * 2);
   }
-  env.shake = u < .28 ? 0 : .15 + w * .9; env.partGlow = '#a7b4cc';
-  env.whiteout = seg(u, .86, .99);
+  env.shake = u < .28 ? 0 : u >= HIT ? (u < HIT + .04 ? .35 : .03) : .15 + w * .8; env.partGlow = '#a7b4cc';
+  env.whiteout = seg(u, .965, 1);
   env.shadowAt = new THREE.Vector3(0, 0, 0); env.shadowSpan = 70;
 };
 S[3] = (t, u) => { // neighbours whispering over the fence
@@ -671,6 +694,7 @@ export function draw(frame) {
   applyEnv();
   renderer.render(scene, camera);
   ctx.drawImage(renderer.domElement, 0, 0, W, H);
+  if (env.mode === 'day' && env.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${env.flash * .5})`; ctx.fillRect(0, 0, W, H); }
   if (env.whiteout > 0) {                     // snow covers the lens
     ctx.fillStyle = `rgba(246,250,255,${env.whiteout})`; ctx.fillRect(0, 0, W, H);
     for (let i = 0; i < 90; i++) { const r = rng(i + 777); ctx.fillStyle = `rgba(214,226,245,${env.whiteout * (.3 + r() * .4)})`; const sz = 30 + r() * 160; ctx.beginPath(); ctx.arc(r() * W, (r() * H + t * 900 * (.5 + r())) % H, sz, 0, 7); ctx.fill(); }

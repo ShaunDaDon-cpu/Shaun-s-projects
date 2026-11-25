@@ -90,6 +90,8 @@ export function SCORE(ac, offset = 0) {
   music.gain.setValueAtTime(1, at(s(2) + d(2) * .28)); music.gain.linearRampToValueAtTime(.3, at(s(2) + d(2) * .5)); music.gain.setValueAtTime(.3, at(s(3) - .02)); music.gain.linearRampToValueAtTime(1, at(s(3)));
   crackSfx(s(2) + d(2) * .28, .32); rumble(s(2) + d(2) * .3, d(2) * .68, .6); roar(s(2) + d(2) * .4, d(2) * .58, .32);
   whoosh(s(2) + d(2) * .8, d(2) * .2, 400, 5000, .3);
+  babyCry(s(2) + d(2) * .4, d(2) * .31, .1);                                     // the runner's scream
+  thud(s(2) + d(2) * .79, .8, 65); bonk(s(2) + d(2) * .79, .3); tweet(s(2) + d(2) * .84, .07); tweet(s(2) + d(2) * .91, .06);   // splat on the lens, dizzy
   sfx.gain.setValueAtTime(1, at(s(3) - .02)); sfx.gain.linearRampToValueAtTime(0, at(s(3) + .01)); sfx.gain.setValueAtTime(0, at(s(3) + .4)); sfx.gain.linearRampToValueAtTime(1, at(s(3) + .45));
   // gags
   bell(s(4) + .05, N('C6'), .05, .4); bell(s(4) + .25, N('E6'), .05, -.4); bell(s(4) + .45, N('G6'), .05, .4);   // jazz-hand sparkle
