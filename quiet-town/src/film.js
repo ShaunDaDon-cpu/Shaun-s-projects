@@ -151,6 +151,15 @@ const lookAt = new THREE.Vector3();
 let env;
 function cam(p0, l0, p1, l1, u, fov = 45) { const k = u; camera.position.set(lerp(p0[0], p1[0], k), lerp(p0[1], p1[1], k), lerp(p0[2], p1[2], k)); lookAt.set(lerp(l0[0], l1[0], k), lerp(l0[1], l1[1], k), lerp(l0[2], l1[2], k)); camera.fov = fov; }
 const still = (p, l, fov) => cam(p, l, p, l, 0, fov);
+// close-up on a character's face, framed from the direction it faces, face sitting above the caption band
+const _h = new THREE.Vector3(), _hq = new THREE.Quaternion();
+function closeUp(ch, { dist = 3.2, side = 0, up = .3, below = .5, fov = 38 } = {}) {
+  ch.group.updateMatrixWorld(true);
+  ch.faceMesh.getWorldPosition(_h); ch.head.getWorldQuaternion(_hq);
+  const k = ch.group.scale.x, f = new THREE.Vector3(0, 0, 1).applyQuaternion(_hq).normalize(), r = new THREE.Vector3(f.z, 0, -f.x).normalize();
+  camera.position.copy(_h).addScaledVector(f, dist * k).addScaledVector(r, side * k); camera.position.y += up * k;
+  lookAt.copy(_h); lookAt.y -= below * k; camera.fov = fov;
+}
 function flashAt(t, times) { let f = 0; for (const s of times) { const d = t - s; if (d >= 0 && d < .35) f = Math.max(f, d < .06 ? 1 : d < .12 ? .3 : d < .18 ? .8 : 1 - d / .35); } return f; }
 function seatOn(ch, x, top, z, ry) { ch.at(x, top - .5 * ch.scale, z, ry).sit(); return ch; }
 function lieDown(ch, x, y, z, faceDown = false) { ch.at(x, y, z); ch.group.rotation.set(-Math.PI / 2, faceDown ? Math.PI : 0, 0); return ch; }
@@ -326,6 +335,7 @@ S[3] = (t, u) => { // neighbours whispering over the fence: she mouths it behind
   for (const l of T.lampObjs) if (l.userData.at[0] < 0 && l.userData.at[1] === 30) l.visible = false;   // keep the lamppost out of the two-shot
   cam([-10.1, 5.2, 35], [-10.1, 4.1, 22], [-10.1, 5.1, 33.6], [-10.1, 4.1, 22], ease(u), 42);
   env.shadowAt = new THREE.Vector3(-10, 0, 22); env.shadowSpan = 20;
+  if (t >= 1.2) closeUp(C.neighB, { dist: 4.4, side: 1.3, below: .6 });                 // CU: he hears it (gasp)
 };
 S[4] = (t, u) => { // stadium: silent jazz-hands cheering
   T.group.visible = false; stadium.visible = true; env.mode = 'day';
@@ -361,6 +371,7 @@ S[8] = (t, u) => { // born loud: baby screams, nurses fly
   shockwave(new THREE.Vector3(560, 3, -3.5), .25, t, { speed: 14, life: .7 });
   env.shake = t > .25 ? .35 * (1 - u) : 0;
   still([560, 11, 6.5], [560, 2.6, -2.6], 50);
+  if (t < .4) { const hp = new THREE.Vector3(560, 2.6, -3.9); camera.position.set(hp.x, hp.y + 1.7, hp.z + 1.5); lookAt.set(hp.x, hp.y - .35, hp.z + .25); camera.fov = 40; }   // CU: the first scream
 };
 S[9] = (t, u) => { // first word knocks a pine cone onto dad
   stroller.visible = true; stroller.position.set(-19.8, 0, 46.4); stroller.rotation.y = .5;
@@ -374,6 +385,7 @@ S[9] = (t, u) => { // first word knocks a pine cone onto dad
   shockwave(new THREE.Vector3(-19.8, 3.2, 47), .75, t, { speed: 10, count: 2, life: .6 });
   cam([-10.5, 7.2, 60], [-22, 5.6, 46], [-11.5, 7, 58.5], [-22, 5.8, 46], ease(u), 46);
   env.shadowAt = new THREE.Vector3(-22, 0, 46); env.shadowSpan = 18;
+  if (t >= 2.0) closeUp(C.dad, { dist: 3.4, side: .3 });                    // CU: dizzy Dad
 };
 S[10] = (t, u) => { // screams into pillow at night
   inRoom(R.kid); dress(C.kid, true);
@@ -555,6 +567,7 @@ S[34] = (t, u) => { // two disasters cancelled each other out
   C.kid.at(towerTop.x, towerTop.y, towerTop.z + .8, .3).face('happy').armsUp(.9); C.kid.lArm.rotation.z += Math.sin(t * 8) * .1; C.kid.rArm.rotation.z -= Math.sin(t * 8) * .1;
   cam([18, 38, -30], [-19, 24, -76], [14, 36, -34], [-19, 25, -76], ease(u), 46);
   env.shadowAt = new THREE.Vector3(-15, 0, -60); env.shadowSpan = 50;
+  if (t >= .8) closeUp(C.kid, { dist: 3.8, side: .2, up: .2, below: .75 });             // CU: the boy's triumph
 };
 // ----- the ceremony (day) -----
 function ceremonyBase(t) { env.mode = 'day'; T.cornice.visible = false; T.plug.visible = true; env.shadowAt = new THREE.Vector3(0, 0, -52); env.shadowSpan = 30; }
@@ -566,6 +579,7 @@ S[35] = (t, u) => { // the mayor gives me a medal
   seatCrowd(t, { cheer: u > .55 ? 1 : 0, faceExpr: u > .55 ? 'happy' : undefined }); family(t);
   if (u > .55) for (const k of ['mom', 'dad']) C[k].jazz(t + (k === 'mom' ? .3 : 0)).face('happy');
   cam([-.4, 6.2, -50.6], [-.2, 4, -60], [-.4, 6, -51.6], [-.2, 4, -60], ease(u), 50);
+  if (t >= 1.6) closeUp(C.kid, { dist: 4.4, up: .2, below: .9, fov: 40 });   // CU: beaming, medal on his chest
 };
 S[36] = (t, u) => { // MAYOR: and a fine. for shouting.
   ceremonyBase(t);
@@ -646,15 +660,17 @@ S[45] = (t, u) => { // everybody froze
   seatCrowd(t, { faceExpr: 'worried', lookUp: .55 }); family(t, { dad: 'skip', mom: 'skip', grandma: 'skip' });
   for (const [k, x] of [['dad', -8], ['mom', -11], ['grandma', -5]]) { C[k].at(x, 0, -51.2, Math.PI).face('worried'); C[k].head.rotation.x = -.55; }
   cam([-10, 7.6, -60], [-8, 3.8, -46], [7, 7.6, -60], [5, 3.8, -46], ease(u), 50);
+  if (t >= .4) closeUp(C.grandma, { dist: 3.4, side: .2, up: 0, below: .3 });   // CU: Grandma's uh-oh
 };
 S[46] = (t, u) => { // a little snow slid off the church roof
   ceremonyBase(t);
-  C.mayor.at(1.6, 0, -68, 0).sit(); C.mayor.face(u < .45 ? 'dizzy' : 'gasp'); C.mayor.hat.visible = false; C.mayor.head.rotation.x = u > .45 ? -.5 : 0;
+  C.mayor.at(1.6, 0, -68, 0).sit(); C.mayor.face(u < .33 ? 'dizzy' : 'gasp'); C.mayor.hat.visible = false; C.mayor.head.rotation.x = u > .33 ? -.5 : 0;
   const slide = eIn(seg(u, .05, .55)), fall = eIn(seg(u, .55, .85));
   const sn = T.roofSnowFront; sn.position.set(0, 17.31 - slide * 4.4 - fall * 13, 4.13 + slide * 4.2 + fall * 3.6); sn.rotation.x = .811 + fall * .7; sn.visible = u < .86;
   if (u > .85) { mound.visible = true; mound.position.set(1.6, 0, -67.9); mound.scale.set(1, eOut(seg(u, .85, .95)), 1); snowPuff(t - u * 0 - .85 * L46, new THREE.Vector3(1.6, 1, -67), 50, 1); }
   cam([9, 3.5, -54.5], [1.6, 10, -68], [8.6, 3.4, -55], [1.6, 9, -68], ease(u), 56);
   env.shake = u > .85 ? .25 : 0;
+  if (t >= .8 && t < 1.2) closeUp(C.mayor, { dist: 3.6, up: 0, below: .3 });   // CU: the mayor sees it coming
 };
 const L46 = LINES[45].dur;
 S[47] = (t, u) => { // right onto the mayor
@@ -685,6 +701,7 @@ S[49] = (t, u) => { // GRANDMA: runs in the family
   C.grandma.body.rotation.z = -.04; C.grandma.head.rotation.x = .05 * Math.sin(t * 6) * (lvl ? 1 : 0);
   seatOn(C.kid, -2.6, 1.35, -49.7, Math.PI + .2 + turn * .3).face(t > 1.15 ? 'happy' : 'grin'); medal.visible = true; C.kid.head.rotation.y = turn * .35; C.kid.head.rotation.x = -.12;
   cam([-3.8, 4.3, -58.4], [-3.8, 3.2, -50], [-3.8, 4.2, -57.6], [-3.8, 3.2, -50], ease(u), 44);
+  if (t >= 1.2) closeUp(C.grandma, { dist: 3.2, side: -.3 });              // CU: the wink
 };
 S[50] = (t, u) => { // end card: the town by day, rising
   env.mode = 'day'; T.cornice.visible = false; T.plug.visible = true;
