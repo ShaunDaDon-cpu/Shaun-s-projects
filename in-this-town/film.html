@@ -459,7 +459,7 @@ function buildStage(o = {}) {
   const g = new THREE.Group();
   g.add(plate(60, 60, 0x2a1c14, 0, -0.01, 0, false));
   const fl = plate(26, 14, 0xb07a45, 0, 1.2, 0, true, 0.5); g.add(fl);
-  g.add(box(26, 1.2, 14, 0x6b3f22, 0, 0.6, 0, { r: 0.02 }));
+  g.add(box(26, 1.1, 14, 0x6b3f22, 0, 0.55, 0, { r: 0.02 }));
   for (let i = 0; i < 26; i++) { const c = box(1.05, 16, 0.8, i % 2 ? 0xc81d3a : 0xb0142f, -13 + i + 0.5, 9.2, -6.6 + Math.sin(i * 1.3) * 0.25, { r: 0.3 }); g.add(c); }
   for (const s of [-1, 1]) for (let i = 0; i < 4; i++) g.add(box(1.05, 16, 0.8, i % 2 ? 0xc81d3a : 0xb0142f, s * (13.5 - i * 0.9), 9.2, -3 + i * 1.4, { r: 0.3 }));
   g.add(box(28, 2, 1.2, 0xd4a017, 0, 16.6, -6.2));
