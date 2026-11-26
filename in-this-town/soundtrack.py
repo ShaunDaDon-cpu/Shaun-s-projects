@@ -1,10 +1,11 @@
 """Original soundtrack + SFX + voice blips for "In This Town". Writes soundtrack.wav (44.1 kHz stereo).
 Everything is synthesized here; no samples are used."""
-import json, math, wave
+import json, math, os, wave
 import numpy as np
 from scipy.signal import lfilter, butter
 
 SR = 44100
+os.makedirs('stems', exist_ok=True)
 DATA = json.load(open('shots.json'))
 DUR = DATA['duration'] + 0.5
 N = int(DUR * SR)
@@ -354,7 +355,7 @@ sparkle(10.1)
 add(sfx, 13.0, ding(84, 0.4), 0.0)
 sparkle(16.0, 3)
 add(sfx, 17.1, noise(0.08) * np.exp(-t_(0.08) * 40), 0.35); sparkle(17.15, 6)
-add(sfx, 19.45, scratch(), 0.55)
+add(sfx, 19.2, scratch(), 0.55)
 # doors slam open: low boom + wood crack + crash + orchestral hit
 add(sfx, 20.0, thud(48, 0.9), 1.0); add(sfx, 20.0, bp(noise(0.25), 200, 2500) * np.exp(-t_(0.25) * 18), 0.6)
 add(sfx, 20.0, crash(2.0), 0.45); add(sfx, 20.0, timpani(36, 1.8), 0.7)
@@ -363,7 +364,6 @@ for k, d in enumerate([0.09, 0.2]): add(sfx, 20.0 + d, thud(70, 0.4), 0.35 / (k 
 for ft in (20.55, 21.05, 21.55):  # heavy footsteps with a little hall echo
     add(sfx, ft, thud(105, 0.3), 0.45); add(sfx, ft + 0.14, thud(105, 0.3), 0.14)
 add(sfx, 25.5, whoosh(0.9, 400, 4000), 0.3)
-for i in range(12): add(sfx, 30.0 + i * 0.165, thud(90, 0.2), 0.18, ((i % 2) - .5) * .4)
 for t0 in np.arange(34.2, 37, 0.33): add(sfx, t0 + rng.random() * 0.1, pop(), 0.12, rng.uniform(-.6, .6))
 for t0 in (38.0, 38.7, 39.3): add(sfx, t0, cough(), 0.5)
 add(sfx, 44.0, whoosh(0.5, 600, 5000), 0.35); add(sfx, 44.45, ding(88, 0.8), 0.25)
@@ -376,12 +376,80 @@ for t0 in np.arange(69.2, 72, 0.33): add(sfx, t0 + rng.random() * 0.1, pop(), 0.
 add(sfx, 72.4, slide_whistle(0.6), 0.22); add(sfx, 73.0, thud(80, 0.4), 0.6)
 for t0 in np.arange(74.0, 77, 0.42): add(sfx, t0, clank(), 0.1, -0.3)
 add(sfx, 75.8, ding(93, 0.6), 0.2)
-add(sfx, 79.35, clank() * 0.6 + thud(200, 0.2)[: int(0.3 * SR)] if False else thud(200, 0.25), 0.6)
+add(sfx, 79.35, thud(200, 0.25), 0.6)
 add(sfx, 80.0, boom(), 1.0)
 for i in range(10): add(sfx, 80.4 + rng.random() * 1.5, thud(120 + rng.random() * 200, 0.25), 0.15, rng.uniform(-.7, .7))
 add(sfx, 84.0, whoosh(0.6, 300, 1500), 0.15); add(sfx, 84.4, thud(140, 0.15), 0.25)
 crowd = bp(noise(2.6), 400, 3500) * (np.sin(np.pi * t_(2.6) / 2.6) ** 0.5)
 add(sfx, 87.3, crowd, 0.18)
+
+# ================= FOLEY PASS: knocks, slams, crunches, footsteps, heartbeat =================
+def knock(f=190):
+    t = t_(0.18)
+    body = np.sin(2 * np.pi * f * t) * np.exp(-t * 38) + 0.6 * np.sin(2 * np.pi * f * 2.3 * t) * np.exp(-t * 55)
+    return body + 0.5 * bp(noise(0.18), 800, 4000) * np.exp(-t * 120)
+
+
+def crunch(d=0.3, lo=900, hi=6500, density=420, seed=0):
+    r = np.random.default_rng(seed); n = int(d * SR); x = np.zeros(n)
+    for _ in range(int(density * d)):
+        k = int(r.random() * (n - 400)); L = int(40 + r.random() * 300)
+        x[k:k + L] += r.standard_normal(L) * np.exp(-np.arange(L) / (L / 4)) * (0.4 + r.random())
+    x = bp(x, lo, hi); t = t_(d)
+    return x * np.exp(-t * (3.0 / d)) / (np.max(np.abs(x)) + 1e-9)
+
+
+def step(kind='shoe', seed=0):
+    r = np.random.default_rng(seed)
+    if kind == 'tiptoe':
+        t = t_(0.08); return 0.5 * bp(noise(0.08), 1500, 6000) * np.exp(-t * 90) + 0.3 * np.sin(2 * np.pi * 220 * t) * np.exp(-t * 80)
+    if kind == 'run':
+        t = t_(0.12); return thud(110 + r.random() * 30, 0.12) * 0.7 + 0.4 * bp(noise(0.12), 600, 4000) * np.exp(-t * 60)
+    t = t_(0.22)
+    heel = thud(95 + r.random() * 25, 0.22) * 0.8
+    scuff = bp(noise(0.22), 700, 5000) * np.exp(-t * 35) * 0.35
+    grit = crunch(0.12, 1500, 7000, 300, seed) * 0.25
+    out = heel + scuff; out[:len(grit)] += grit
+    return out
+
+
+def heartbeat(gain=1.0):
+    t = t_(0.5)
+    lub = np.sin(2 * np.pi * 52 * t) * np.exp(-t * 18) * (t < 0.2)
+    dub = np.zeros(len(t)); k = int(0.19 * SR); t2 = t[: len(t) - k]
+    dub[k:] = 0.75 * np.sin(2 * np.pi * 44 * t2) * np.exp(-t2 * 20)
+    return lp(lub + dub, 180) * 2.2 * gain
+
+
+def heartbeats(t0, t1, bpm0, bpm1, g0=0.5, g1=0.9):
+    t = t0
+    while t < t1:
+        u = (t - t0) / max(t1 - t0, 1e-6); bpm = bpm0 + (bpm1 - bpm0) * u
+        add(sfx, t, heartbeat(), g0 + (g1 - g0) * u, 0); t += 60.0 / bpm
+
+# knocks: three hard knocks on the theater doors before they burst open
+for i, kt in enumerate((19.5, 19.68, 19.86)): add(sfx, kt, knock(175 - i * 6), 0.85, 0.15)
+# slams (layered on the existing hits) with crunches of splintering wood / plates / plastic
+add(sfx, 20.0, crunch(0.45, 600, 5000, 520, 1), 0.55, 0.1)                       # doors splinter
+add(sfx, 47.8, crunch(0.35, 1200, 7000, 600, 2), 0.45, -0.1)                     # fork slam cracks the plate
+add(sfx, 79.35, crunch(0.25, 800, 6000, 700, 3), 0.6); add(sfx, 79.35, knock(120), 0.6)  # button smash
+add(sfx, 80.05, crunch(0.9, 300, 4000, 500, 4), 0.6)                             # machine crumples
+for i in range(6): add(sfx, 80.6 + i * 0.22 + rng.random() * 0.1, crunch(0.2, 1000, 6000, 400, 10 + i), 0.25, rng.uniform(-.6, .6))
+add(sfx, 73.0, crunch(0.18, 500, 3000, 300, 5), 0.3)                             # Tess hits the floor
+add(sfx, 84.4, knock(260), 0.35)                                                 # cup set on the counter
+# footsteps
+for i, ft in enumerate((20.55, 21.05, 21.55)): add(sfx, ft, step('shoe', i), 0.55, 0)                       # Rob down the aisle
+for i, ft in enumerate(np.arange(28.4, 29.9, 0.2)): add(sfx, ft, step('shoe', 20 + i), 0.22, ((i % 2) - .5) * .5)  # out of the warehouse
+for i, ft in enumerate(np.arange(30.0, 32.0, 0.085)): add(sfx, ft + rng.random() * 0.03, step('shoe', 40 + i), 0.16 + 0.1 * (i / 24), rng.uniform(-.7, .7))  # forty marching
+for i, ft in enumerate(np.arange(43.2, 46.0, 0.34)): add(sfx, ft, step('shoe', 80 + i), 0.18, 0.4 - i * 0.1)  # Rob past the sign
+for i, ft in enumerate(np.arange(57.0, 60.0, 0.45)): add(sfx, ft, step('shoe', 100 + i), 0.14, -0.4)         # Rob ahead in the dark
+for i, ft in enumerate(np.arange(57.15, 60.0, 0.22)): add(sfx, ft, step('tiptoe', 120 + i), 0.3, 0.3)        # family tiptoeing
+add(sfx, 60.9, step('shoe', 140), 0.3)                                                                      # Rob steps out of the tube
+for i, ft in enumerate(np.arange(72.95, 73.95, 0.072)): add(sfx, ft, step('run', 150 + i), 0.28, (-0.4 if i % 2 else 0.4))  # guards run
+# heartbeat
+heartbeats(28.0, 30.0, 92, 118, 0.5, 0.85)      # foggy warehouse morning
+heartbeats(46.2, 47.75, 70, 80, 0.35, 0.6)      # silent dinner before the slam
+heartbeats(76.6, 79.35, 96, 150, 0.45, 1.0)     # reaching for the button, alone in the drop-out
 
 # ================= voice blips & caption ticks =================
 VOICE = {'ROB': (150, 'mumble'), 'ROB #7': (165, 'mumble'), 'REAL ROB': (140, 'mumble'), 'GRANDMA BEV': (430, 'bright'), 'LINDA': (560, 'bright')}
@@ -418,16 +486,20 @@ for s in DATA['shots']:
             t = t_(0.03); add(sfx, t0, hp(noise(0.03), 2500) * np.exp(-t * 150), 0.05, rng.uniform(-.2, .2))
 
 # ================= mix =================
-# duck music under spoken character lines a little
-duck = np.ones(N)
-for s in DATA['shots']:
-    if s['who']:
-        a, b = int(s['t0'] * SR), int(s['t1'] * SR)
-        duck[a:b] = 0.7
-duck = lfilter([0.0005], [1, -0.9995], duck) / 1.0
-duck = np.clip(duck / duck.max(), 0.5, 1)
+# duck music under every narration/dialogue line (-6 dB), smooth 80 ms attack / 350 ms release
+CR = 1000  # control rate
+tgt = np.ones(int(DUR * CR) + 1)
+for s_ in DATA['shots']:
+    wt_, _ = word_times(s_)
+    a_, b_ = int((s_['t0'] - 0.05) * CR), int(min(s_['t1'], wt_[-1] + 0.6) * CR)
+    tgt[a_:b_] = 0.5
+g = np.ones_like(tgt); att, rel = 1 - math.exp(-1 / (0.08 * CR)), 1 - math.exp(-1 / (0.35 * CR))
+for k in range(1, len(tgt)):
+    c = att if tgt[k] < g[k - 1] else rel
+    g[k] = g[k - 1] + (tgt[k] - g[k - 1]) * c
+duck = np.interp(np.arange(N) / SR, np.arange(len(g)) / CR, g)
 # hard cut at the record scratch and before the boom
-for a, b in [(19.5, 22.0), (79.95, 81.0), (47.8, 49.0), (27.95, 30.0)]:
+for a, b in [(19.25, 22.0), (78.95, 81.0), (47.8, 49.0), (27.95, 30.0)]:
     i, j = int(a * SR), int(b * SR); fade = np.linspace(1, 0, 400)
     music[i:i + 400] *= fade[:, None]; music[i + 400:j] = 0
 # 28-30: eerie foggy morning: dissonant tremolo cluster, reverse swells, heartbeat, sting
@@ -437,17 +509,22 @@ glass = sum(np.sin(2 * np.pi * mtof(m) * et + k) for k, m in enumerate([88, 89, 
 add(music, 27.95, glass, 0.12, 0.3)
 for tt, d in [(28.0, 0.9), (28.55, 0.6), (29.05, 0.5)]:
     sw = t_(d); add(music, tt, lp(rng.standard_normal(len(sw)), 2500) * (sw / d) ** 3, 0.25, -0.3 + tt % 1)
-for hb in (28.05, 28.33, 28.85, 29.13):
-    add(music, hb, thud(55, 0.3), 0.5)
 add(music, 29.55, piano(40, 1.2) + piano(41, 1.2) + piano(46, 1.2), 0.35)
 add(music, 29.55, brass([40, 41, 46], 0.4), 0.2)
 # roll-up warehouse door rattling open, then a clunk
 rt2 = t_(0.6); rattle = bp(rng.standard_normal(len(rt2)), 300, 3000) * (0.55 + 0.45 * np.sign(np.sin(2 * np.pi * 28 * rt2))) * np.clip(rt2 / 0.05, 0, 1) * np.clip((0.6 - rt2) / 0.1, 0, 1)
-add(music, 28.0, rattle, 0.35, -0.1); add(music, 28.58, thud(90, 0.3), 0.35)
-for i, ft in enumerate(np.arange(28.4, 29.9, 0.2)): add(music, ft, thud(120 + (i % 3) * 15, 0.15), 0.12, ((i % 2) - 0.5) * 0.4)
+add(sfx, 28.0, rattle, 0.35, -0.1); add(sfx, 28.58, thud(90, 0.3), 0.35)
 # low drone under the "then he walked in" + Rob line
 dr = pad([45, 52], 2.0, bright=400, a=0.4); add(music, 20.2, dr, 0.18)
-mix = music * duck[:, None] * 0.8 + sfx
+music_bus = music * duck[:, None] * 0.8
+mix = music_bus + sfx
+def write_wav(name, x):
+    x = x[: int(DATA['duration'] * SR)].copy(); f = int(0.6 * SR); x[-f:] *= np.linspace(1, 0, f)[:, None]
+    with wave.open(name, 'wb') as w:
+        w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(x, -1, 1) * 32767).astype(np.int16).tobytes())
+pk = np.max(np.abs(np.tanh(mix * 1.1) * 0.9))
+write_wav('stems/music.wav', np.tanh(music_bus * 1.1) * 0.9 / pk * 0.89)
+write_wav('stems/sfx.wav', np.tanh(sfx * 1.1) * 0.9 / pk * 0.89)
 mix = np.tanh(mix * 1.1) * 0.9
 mix /= np.max(np.abs(mix)) / 0.89
 end = int(DATA['duration'] * SR); mix = mix[:end]
