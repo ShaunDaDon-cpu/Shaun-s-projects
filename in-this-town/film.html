@@ -827,6 +827,72 @@ B[31] = () => { const root = buildTown('sunset', { sign: true, clear: x => Math.
     update: (t) => { const bow = Math.max(0, Math.sin(seg(t, 0.2, 1.4) * Math.PI)); ['bev', 'dale', 'linda', 'tess'].forEach((k, i) => { const c = f[k]; c.pose(t < 1.4 ? { bx: bow * 0.6, lax: -0.3, rax: -0.3 } : { lax: -2.9, rax: -2.9, laz: 0.3, raz: 0.3, bob: Math.abs(Math.sin(t * 6 + i)) * 0.4 }); c.setFace(t < 1.4 ? 'happy' : 'joy'); });
       ppl.forEach((c, i) => { c.pose({ rax: -2.8, raz: 0.3, lax: -0.2, bob: Math.abs(Math.sin(t * 6 + i)) * 0.3 }); c.setFace(i % 2 ? 'joy' : 'happy'); }); cof.pose({ rax: -2.6, raz: 0.4 + Math.sin(t * 8) * 0.3 }); cf.update(t, 22); } }; };
 
+
+// ---------- film crew gear ----------
+function stick(a, b, r, color) { const d = b.clone().sub(a); const m = cyl(r, r, d.length(), color, 8); m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); return m; }
+function filmCam() {
+  const g = new THREE.Group(); const H = 3.4;
+  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2 + 0.5; g.add(stick(V(0, H, 0), V(Math.cos(a) * 1.3, 0, Math.sin(a) * 1.3), 0.07, 0x2a2a2e)); }
+  g.add(box(0.6, 0.35, 0.6, 0x2a2a2e, 0, H + 0.15, 0));
+  g.add(box(1.0, 1.1, 1.9, 0x1c1c20, 0, H + 0.9, -0.1, { r: 0.12 }));
+  const lens = cyl(0.33, 0.38, 0.9, 0x111114, 16); lens.rotation.x = Math.PI / 2; lens.position.set(0, H + 0.9, 1.25); g.add(lens);
+  const glass = cyl(0.27, 0.27, 0.05, 0x3a6aa8, 16, { m: { roughness: 0.05, metalness: 0.6 } }); glass.rotation.x = Math.PI / 2; glass.position.set(0, H + 0.9, 1.71); g.add(glass);
+  g.add(box(1.3, 1.0, 0.12, 0x111114, 0, H + 0.9, 1.75, { r: 0.04 }));
+  for (const z of [-0.65, 0.35]) { const rl = cyl(0.55, 0.55, 0.25, 0x2a2a2e, 20); rl.rotation.z = Math.PI / 2; rl.position.set(0, H + 1.95, z); g.add(rl); }
+  g.add(box(0.15, 0.15, 0.15, 0xff2020, 0.42, H + 1.35, 0.6, { m: { emissive: 0xff0000, emissiveIntensity: 2 } }));
+  g.add(box(0.7, 0.5, 0.08, 0x111111, -0.62, H + 1.0, -0.4).rotateY(-0.9));
+  return g;
+}
+function boomMic() {
+  const g = new THREE.Group();
+  const fuzz = cyl(0.32, 0.32, 1.3, 0x8a8d93, 14, { m: { roughness: 1 } }); fuzz.rotation.z = Math.PI / 2; g.add(fuzz);
+  for (const x of [-0.65, 0.65]) { const cap = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 8), M(0x8a8d93, { roughness: 1 })); cap.position.x = x; g.add(cap); }
+  g.add(box(0.12, 0.5, 0.12, 0x333333, 0.2, 0.4, 0));
+  return g;
+}
+function lightStand(color = 0xfff4d6) {
+  const g = new THREE.Group();
+  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; g.add(stick(V(0, 1.2, 0), V(Math.cos(a) * 1.0, 0, Math.sin(a) * 1.0), 0.06, 0x333333)); }
+  g.add(cyl(0.08, 0.08, 5.2, 0x333333, 8)); g.children[g.children.length - 1].position.y = 3.2;
+  const head = box(1.6, 1.3, 0.9, 0x222222, 0, 6.0, 0); g.add(head);
+  g.add(box(1.4, 1.1, 0.1, color, 0, 6.0, 0.47, { m: { emissive: color, emissiveIntensity: 1.6 } }));
+  return g;
+}
+// spec: { boom: [x, y, z, side, rise], cams: [[x, y, z, aimX, aimZ]], lights: [[x, y, z, aimX, aimZ]] }
+function addCrew(root, spec) {
+  const aim = (o, x, z, ax, az) => { o.rotation.y = Math.atan2(ax - x, az - z); };
+  for (const [x, y, z, ax, az] of spec.cams || []) { const c = filmCam(); c.position.set(x, y, z); aim(c, x, z, ax, az); root.add(c); }
+  for (const [x, y, z, ax, az] of spec.lights || []) { const l = lightStand(); l.position.set(x, y, z); aim(l, x, z, ax, az); root.add(l); }
+  if (spec.boom) {
+    const [x, y, z, side = 1, rise = 0.55] = spec.boom; const bg = new THREE.Group(); bg.position.set(x, y, z);
+    const mic = boomMic(); bg.add(mic);
+    const dir = V(side * Math.cos(rise), Math.sin(rise), -0.15).normalize();
+    bg.add(stick(V(0, 0.6, 0), dir.clone().multiplyScalar(18).add(V(0, 0.6, 0)), 0.07, 0x9aa0a8));
+    mic.rotation.y = side > 0 ? 0 : Math.PI; root.add(bg); root.boomG = bg; bg.base = bg.position.clone();
+  }
+}
+function withCrew(fn, spec) { return () => { const sh = fn(); addCrew(sh.root, spec); const up = sh.update; sh.update = (t, u, T) => { up(t, u, T); const b = sh.root.boomG; if (b) { b.position.y = b.base.y + Math.sin(t * 2.1) * 0.08; b.position.x = b.base.x + Math.sin(t * 1.3) * 0.1; } }; return sh; }; }
+const CREW = {
+  0: { cams: [[-12, 0, -3.6, -16, -8], [12.5, 0, -3.6, 16, -8]] },
+  1: { boom: [13.5, 7.9, 6.6, 1, 0.6], cams: [[10.8, 0, 9.8, 13, 6.2]] },
+  2: { boom: [0.3, 7.6, -7.6, 1, 0.5], cams: [[-2.3, 0, 0.2, -1.5, -8.5], [2.0, 0, 1.2, 1.5, -8.5]], lights: [[-7.2, 0, -3.5, 0, -8.5]] },
+  3: { boom: [0.3, 7.7, 0.5, -1, 0.6], cams: [[2.0, 0, 3.4, 0, 0]], lights: [[-3.4, 0, 2.6, 0, 0]] },
+  4: { boom: [0.2, 5.4, 0.5, 1, 0.6] },
+  5: { boom: [1.4, 5.0, -0.2, 1, 0.5], cams: [[2.4, 1.2, 2.2, 0, -0.5]], lights: [[-3.8, 1.2, 2.5, 0, -0.5]] },
+  6: { boom: [0.5, 8.0, 1.5, 1, 0.5], cams: [[-1.8, 1.2, 4.6, 0, 1]] },
+  9: { boom: [0.2, 8.3, 1.2, 1, 0.45], cams: [[3.8, 1.2, 5.0, 0, 1]], lights: [[-4.4, 1.2, 4.0, 0, 1]] },
+  12: { boom: [0.3, 7.2, 0.5, 1, 0.6], cams: [[2.6, 0, 3.6, 0, 0]] },
+  13: { boom: [0.2, 7.6, 0.5, -1, 0.6] },
+  14: { boom: [0.3, 7.0, 0.5, -1, 0.6], cams: [[-2.8, 0, 3.8, 0, 0]] },
+  15: { boom: [0.9, 5.6, 0.9, 1, 0.5], cams: [[3.6, 1.2, 3.6, 0.5, 0.6]] },
+  19: { boom: [0, 8.4, 2.2, 1, 0.5], cams: [[4.8, 0, 7.0, 0, 2]], lights: [[-5.2, 0, 6.0, 0, 2]] },
+  24: { boom: [0.4, 7.5, 3.9, 1, 0.6] },
+  25: { boom: [-0.2, 7.4, 6.9, -1, 0.6] },
+  26: { boom: [0.3, 5.4, 6.3, 1, 0.55], cams: [[-3.0, 0, 9.0, 0, 6]] },
+  31: { boom: [0, 8.6, 2.4, 1, 0.5], cams: [[-6.4, 0, 6.5, 0, 2], [6.4, 0, 6.5, 0, 2]], lights: [[-9.5, 0, 4.0, 0, 2], [9.5, 0, 4.0, 0, 2]] },
+};
+for (const [k, sp] of Object.entries(CREW)) B[k] = withCrew(B[k], sp);
+
 // ---------- caption overlay ----------
 const capEl = document.getElementById('cap'), whoEl = document.getElementById('who'), lineEl = document.getElementById('line'), flashEl = document.getElementById('flash'), titleEl = document.getElementById('title');
 const WHO_COL = { 'ROB': '#5b5f73', 'ROB #7': '#5b5f73', 'GRANDMA BEV': '#7a4fd0', 'REAL ROB': '#8a8f99', 'LINDA': '#ff4fa3' };
