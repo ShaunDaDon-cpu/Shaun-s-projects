@@ -532,11 +532,49 @@ B[6] = () => { const root = buildStage(); const d = CAST.dale(); d.position.set(
   const cf = confetti(140, 9, [14, 16, 8]); cf.position.z = 2; root.add(cf);
   return { root, light: 'stage', cam: (t, u) => camLerp(K([0, 2.4, 10], [0, 5, 1], 45), K([2.2, 2.1, 7.6], [0, 5.4, 1], 46), u),
     update: (t) => { const k = easeOutBack(seg(t, 0.1, 0.6)); d.pose({ rax: lerp(-0.5, -2.9, k), raz: 0.25, laz: lerp(0.1, 1.1, k), bob: Math.abs(Math.sin(t * 7)) * 0.4 * k, hx: -0.15 }); sc.rotation.set(-0.3, 0, 0); cf.update(t, 16); d.setFace(t > 1.6 ? 'joy' : 'happy'); } }; };
-// 8 door bursts
-B[7] = () => { const root = buildStage({ door: true }); const d = CAST.dale(); d.position.set(4.4, 1.2, 3.2); root.add(d); const r = CAST.rob(7); r.position.set(0, 1.2, -6.6); root.add(r); const dl = new THREE.PointLight(0xfff0c0, 80, 30); dl.position.set(0, 6, -4); root.add(dl);
-  const sc = script('LEAD!'); d.hold('R', sc, 0, -0.2, 0.3);
-  return { root, light: 'stage', cam: (t, u) => { const c = camLerp(K([1.2, 5.6, 11], [1.2, 4.8, -4], 46), K([1.0, 5.4, 9.8], [0.8, 4.8, -5], 42), u); if (t < 0.35) c.p.x += Math.sin(t * 80) * 0.08; return c; },
-    update: (t) => { const o = easeOut(seg(t, 0, 0.35)); root.door.pl.rotation.y = -o * 1.7; root.door.pr.rotation.y = o * 1.7; r.position.z = -6.6 + easeOut(seg(t, 0.4, 1.9)) * 2.5; r.pose(walkPose(t, 5, 0.4, { hx: 0.15 })); d.rotation.y = lerp(0, Math.PI - 0.5, easeOutBack(seg(t, 0.15, 0.55))); d.pose({ rax: -0.6, laz: 0.4, bob: 0 }); d.setFace('shocked'); } }; };
+// 8 doors at the back of the house slam open; Rob walks down the aisle
+function buildHouse() {
+  const g = new THREE.Group();
+  g.add(plate(60, 24, 0x5a1420, 0, 0.02, 16, true, 0.5));
+  const seatMat = M(0xb0142f), legMat = M(0x2a1a14);
+  for (let row = 0; row < 7; row++) {
+    const z = 9.5 + row * 2.1, y = row * 0.25;
+    for (const sx of [-1, 1]) for (let k = 0; k < 7; k++) {
+      const x = sx * (2.0 + k * 1.55);
+      const seat = new THREE.Group(); seat.position.set(x, y, z);
+      seat.add(box(1.3, 0.4, 1.2, 0, 0, 1.0, 0, { mat: seatMat }));
+      seat.add(box(1.3, 1.5, 0.3, 0, 0, 1.75, 0.55, { mat: seatMat }));
+      seat.add(box(0.2, 0.8, 0.2, 0, 0, 0.4, 0, { mat: legMat }));
+      g.add(seat);
+    }
+    if (row) g.add(box(60, 0.25, 2.1, 0x5a1420, 0, y - 0.12, z, { r: 0, cast: false }));
+  }
+  const wallC = 0x2b1018;
+  g.add(box(27, 16, 0.6, wallC, -16.6, 8, 26.3, { r: 0 })); g.add(box(27, 16, 0.6, wallC, 16.6, 8, 26.3, { r: 0 })); g.add(box(6.6, 8.4, 0.6, wallC, 0, 11.8, 26.3, { r: 0 }));
+  g.add(box(7.4, 0.6, 0.8, 0xd4a017, 0, 7.8, 26.1)); g.add(box(0.6, 7.6, 0.8, 0xd4a017, -3.5, 3.8, 26.1)); g.add(box(0.6, 7.6, 0.8, 0xd4a017, 3.5, 3.8, 26.1));
+  const ex = sign(['EXIT'], 1.6, 0.6, { bg: '#1a0000', fg: '#ff3030', glow: true }); ex.position.set(0, 8.7, 25.95); ex.rotation.y = Math.PI; g.add(ex);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 7.6), new THREE.MeshBasicMaterial({ color: 0xfff3d6, toneMapped: false })); glow.position.set(0, 3.8, 26.7); glow.rotation.y = Math.PI; g.add(glow);
+  const mk = (hx, dir) => { const p = new THREE.Group(); p.position.set(hx, 0, 26.3); const d = box(3.15, 7.5, 0.3, 0x5a3a22, -dir * 1.58, 3.75, 0); p.add(d); p.add(box(0.2, 0.9, 0.2, 0xd4a017, -dir * 2.7, 3.8, -0.2)); const w = box(1.2, 1.6, 0.32, 0xffe9b0, -dir * 1.58, 5.4, 0, { m: { emissive: 0xffe0a0, emissiveIntensity: 1.2 } }); p.add(w); g.add(p); return p; };
+  g.dl = mk(-3.15, -1); g.dr = mk(3.15, 1);
+  const beam = new THREE.Group(); const cone = spotCone(20, 6, 0xfff0c8, 0.0); beam.add(cone); beam.rotation.x = Math.PI / 2; beam.position.set(0, 3.6, 6); g.add(beam); g.beam = cone;
+  return g;
+}
+B[7] = () => { const root = buildStage(); const house = buildHouse(); root.add(house);
+  const d = CAST.dale(); d.position.set(4.0, 1.2, 4.6); root.add(d); const sc = script('LEAD!'); d.hold('R', sc, 0, -0.2, 0.3);
+  const r = CAST.rob(7); root.add(r);
+  const back = new THREE.PointLight(0xfff0c8, 0, 40); back.position.set(0, 5, 27.5); root.add(back);
+  const spill = new THREE.SpotLight(0xfff0c8, 0, 60, 0.45, 0.6); spill.position.set(0, 6, 27); spill.target.position.set(0, 0, 8); root.add(spill, spill.target);
+  return { root, light: 'stage', cam: (t, u) => {
+      const c = camLerp(K([1.6, 6.0, 0.6], [0.2, 4.0, 26], 40), K([1.3, 5.4, 2.6], [0.1, 4.2, 20], 32), u, easeOut);
+      const sh = Math.exp(-t * 7) * (t < 0.6 ? 1 : 0); c.p.x += Math.sin(t * 95) * 0.35 * sh; c.p.y += Math.cos(t * 80) * 0.25 * sh; return c; },
+    update: (t) => {
+      const o = easeOutBack(seg(t, 0, 0.16)); const bounce = Math.sin(seg(t, 0.16, 0.7) * Math.PI * 3) * Math.exp(-seg(t, 0.16, 0.7) * 4) * 0.12;
+      house.dl.rotation.y = (o + bounce) * 1.55; house.dr.rotation.y = -(o + bounce) * 1.55;
+      const lit = clamp(t / 0.1); back.intensity = 140 * lit; spill.intensity = 220 * lit; house.beam.material.opacity = 0.22 * lit * (1 - 0.15 * Math.sin(t * 3));
+      const w = seg(t, 0.3, 2.0); r.position.set(0, 0, 27.5 - w * 7.5); r.rotation.y = Math.PI;
+      r.pose(t < 0.3 ? { lax: -0.15, rax: -0.15 } : walkPose(t, 5.2, 0.38, { lax: 0.25, rax: 0.25, laz: 0.12, raz: 0.12, hx: -0.08, hz: Math.sin(t * 2.6) * 0.06 })); r.setFace('brood');
+      const jump = Math.max(0, Math.sin(seg(t, 0.02, 0.4) * Math.PI)); d.pose({ rax: lerp(-2.9, -0.4, easeOut(seg(t, 0, 0.25))), laz: 0.5 * jump, raz: 0.2, bob: jump * 0.5, hx: -0.1 }); d.setFace('shocked');
+    } }; };
 // 9 rob close-up
 B[8] = () => { const root = buildStage(); const r = CAST.rob(7); r.position.set(0, 1.2, 0); root.add(r); const dl = new THREE.PointLight(0xffe6b0, 40, 20); dl.position.set(-3, 8, -3); root.add(dl);
   return { root, light: 'stage', cam: (t, u) => camLerp(K([0.6, 5.8, 6.5], [0, 5.5, 0], 38), K([0.3, 5.8, 5.2], [0, 5.6, 0], 36), u),

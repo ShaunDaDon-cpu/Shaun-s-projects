@@ -354,8 +354,14 @@ sparkle(10.1)
 add(sfx, 13.0, ding(84, 0.4), 0.0)
 sparkle(16.0, 3)
 add(sfx, 17.1, noise(0.08) * np.exp(-t_(0.08) * 40), 0.35); sparkle(17.15, 6)
-add(sfx, 20.0, scratch(), 0.55)
-add(sfx, 20.05, thud(60, 0.6), 0.7)
+add(sfx, 19.45, scratch(), 0.55)
+# doors slam open: low boom + wood crack + crash + orchestral hit
+add(sfx, 20.0, thud(48, 0.9), 1.0); add(sfx, 20.0, bp(noise(0.25), 200, 2500) * np.exp(-t_(0.25) * 18), 0.6)
+add(sfx, 20.0, crash(2.0), 0.45); add(sfx, 20.0, timpani(36, 1.8), 0.7)
+add(sfx, 20.0, brass([36, 43, 48, 51, 55], 0.7), 0.35)
+for k, d in enumerate([0.09, 0.2]): add(sfx, 20.0 + d, thud(70, 0.4), 0.35 / (k + 1))  # door bounce
+for ft in (20.55, 21.05, 21.55):  # heavy footsteps with a little hall echo
+    add(sfx, ft, thud(105, 0.3), 0.45); add(sfx, ft + 0.14, thud(105, 0.3), 0.14)
 add(sfx, 25.5, whoosh(0.9, 400, 4000), 0.3)
 for i in range(12): add(sfx, 30.0 + i * 0.165, thud(90, 0.2), 0.18, ((i % 2) - .5) * .4)
 for t0 in np.arange(34.2, 37, 0.33): add(sfx, t0 + rng.random() * 0.1, pop(), 0.12, rng.uniform(-.6, .6))
@@ -421,7 +427,7 @@ for s in DATA['shots']:
 duck = lfilter([0.0005], [1, -0.9995], duck) / 1.0
 duck = np.clip(duck / duck.max(), 0.5, 1)
 # hard cut at the record scratch and before the boom
-for a, b in [(20.0, 22.0), (79.95, 81.0), (47.8, 49.0)]:
+for a, b in [(19.5, 22.0), (79.95, 81.0), (47.8, 49.0)]:
     i, j = int(a * SR), int(b * SR); fade = np.linspace(1, 0, 400)
     music[i:i + 400] *= fade[:, None]; music[i + 400:j] = 0
 # low drone under the "then he walked in" + Rob line
