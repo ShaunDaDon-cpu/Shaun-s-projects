@@ -439,8 +439,12 @@ for tt, d in [(28.0, 0.9), (28.55, 0.6), (29.05, 0.5)]:
     sw = t_(d); add(music, tt, lp(rng.standard_normal(len(sw)), 2500) * (sw / d) ** 3, 0.25, -0.3 + tt % 1)
 for hb in (28.05, 28.33, 28.85, 29.13):
     add(music, hb, thud(55, 0.3), 0.5)
-add(music, 29.45, piano(40, 1.2) + piano(41, 1.2) + piano(46, 1.2), 0.35)
-add(music, 29.45, brass([40, 41, 46], 0.5), 0.2)
+add(music, 29.55, piano(40, 1.2) + piano(41, 1.2) + piano(46, 1.2), 0.35)
+add(music, 29.55, brass([40, 41, 46], 0.4), 0.2)
+# roll-up warehouse door rattling open, then a clunk
+rt2 = t_(0.6); rattle = bp(rng.standard_normal(len(rt2)), 300, 3000) * (0.55 + 0.45 * np.sign(np.sin(2 * np.pi * 28 * rt2))) * np.clip(rt2 / 0.05, 0, 1) * np.clip((0.6 - rt2) / 0.1, 0, 1)
+add(music, 28.0, rattle, 0.35, -0.1); add(music, 28.58, thud(90, 0.3), 0.35)
+for i, ft in enumerate(np.arange(28.4, 29.9, 0.2)): add(music, ft, thud(120 + (i % 3) * 15, 0.15), 0.12, ((i % 2) - 0.5) * 0.4)
 # low drone under the "then he walked in" + Rob line
 dr = pad([45, 52], 2.0, bright=400, a=0.4); add(music, 20.2, dr, 0.18)
 mix = music * duck[:, None] * 0.8 + sfx
