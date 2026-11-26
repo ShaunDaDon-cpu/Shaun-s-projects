@@ -427,9 +427,20 @@ for s in DATA['shots']:
 duck = lfilter([0.0005], [1, -0.9995], duck) / 1.0
 duck = np.clip(duck / duck.max(), 0.5, 1)
 # hard cut at the record scratch and before the boom
-for a, b in [(19.5, 22.0), (79.95, 81.0), (47.8, 49.0)]:
+for a, b in [(19.5, 22.0), (79.95, 81.0), (47.8, 49.0), (27.95, 30.0)]:
     i, j = int(a * SR), int(b * SR); fade = np.linspace(1, 0, 400)
     music[i:i + 400] *= fade[:, None]; music[i + 400:j] = 0
+# 28-30: eerie foggy morning: dissonant tremolo cluster, reverse swells, heartbeat, sting
+et = t_(2.1); trem = 0.6 + 0.4 * np.sin(2 * np.pi * 6 * et)
+add(music, 27.95, pad([45, 51, 56, 58, 63], 2.1, bright=700, a=0.5) [:len(et)] * trem, 0.3)
+glass = sum(np.sin(2 * np.pi * mtof(m) * et + k) for k, m in enumerate([88, 89, 94])) * np.clip(et / 1.2, 0, 1) * 0.3
+add(music, 27.95, glass, 0.12, 0.3)
+for tt, d in [(28.0, 0.9), (28.55, 0.6), (29.05, 0.5)]:
+    sw = t_(d); add(music, tt, lp(rng.standard_normal(len(sw)), 2500) * (sw / d) ** 3, 0.25, -0.3 + tt % 1)
+for hb in (28.05, 28.33, 28.85, 29.13):
+    add(music, hb, thud(55, 0.3), 0.5)
+add(music, 29.45, piano(40, 1.2) + piano(41, 1.2) + piano(46, 1.2), 0.35)
+add(music, 29.45, brass([40, 41, 46], 0.5), 0.2)
 # low drone under the "then he walked in" + Rob line
 dr = pad([45, 52], 2.0, bright=400, a=0.4); add(music, 20.2, dr, 0.18)
 mix = music * duck[:, None] * 0.8 + sfx
