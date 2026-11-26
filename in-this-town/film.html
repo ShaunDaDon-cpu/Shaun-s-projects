@@ -140,7 +140,7 @@ function skyTex(top, bottom) {
   return canvasTex(4, 256, (g) => { const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, top); gr.addColorStop(1, bottom); g.fillStyle = gr; g.fillRect(0, 0, 4, 256); });
 }
 const SKY = {
-  day: skyTex('#3aa7ff', '#bfe6ff'), sunset: skyTex('#5b3a9c', '#ff9a4d'), night: skyTex('#070b26', '#1d2a66'),
+  day: skyTex('#4fa3ea', '#f3dcc2'), sunset: skyTex('#5b3a9c', '#ff9a4d'), night: skyTex('#070b26', '#1d2a66'),
   studioPink: skyTex('#ffb3d1', '#ffe0ec'), mist: skyTex('#8c98aa', '#c3ccd6'), dark: skyTex('#050505', '#151515'), warm: skyTex('#2a1a12', '#3a2416'),
 };
 
@@ -325,34 +325,132 @@ function house(color, roof, doorStar = false) {
   g.windows = g.children.filter(m => m.material && m.material.color && m.material.color.getHex() === 0x9fd8ff);
   return g;
 }
-function tree(s = 1) { const g = new THREE.Group(); g.add(box(0.9, 3, 0.9, 0x7a4b2a, 0, 1.5, 0)); g.add(box(3.4, 2.6, 3.4, 0x2fbf5a, 0, 4.2, 0, { r: 0.3 })); g.add(box(2.4, 1.6, 2.4, 0x41d36b, 0, 5.9, 0, { r: 0.3 })); g.scale.setScalar(s); return g; }
+function tree(s = 1, seed = 1) { const g = new THREE.Group(); const r = rng(seed); g.add(box(0.8, 3.2, 0.8, 0x7a4b2a, 0, 1.6, 0));
+  const greens = [0x2e9e4f, 0x3bb55e, 0x268a43];
+  for (let k = 0; k < 4; k++) { const sz = 1.8 + r() * 1.2; g.add(box(sz, sz * 0.85, sz, greens[k % 3], (r() - 0.5) * 1.8, 4.0 + r() * 1.6, (r() - 0.5) * 1.8, { r: 0.12 })); }
+  g.scale.setScalar(s); return g; }
 function lamp(lit = false) { const g = new THREE.Group(); g.add(box(0.35, 6, 0.35, 0x333333, 0, 3, 0)); g.add(box(1.4, 0.3, 0.4, 0x333333, 0.5, 6, 0)); const b = box(0.7, 0.4, 0.7, lit ? 0xfff2a8 : 0xfaf3d0, 1.0, 5.7, 0, { m: lit ? { emissive: 0xffe680, emissiveIntensity: 2 } : {} }); g.add(b); return g; }
 
-function buildTown(mode = 'day', opts = {}) {
+const facadeCache = new Map();
+function facade(color, night) {
+  const key = color + '|' + night;
+  if (!facadeCache.has(key)) {
+    const r = rng(color % 997);
+    facadeCache.set(key, canvasTex(256, 256, (g) => {
+      const c = new THREE.Color(color);
+      g.fillStyle = night ? '#000' : '#' + c.getHexString(); g.fillRect(0, 0, 256, 256);
+      for (let yy = 0; yy < 4; yy++) for (let xx = 0; xx < 4; xx++) {
+        const x = xx * 64, y = yy * 64;
+        if (night) { if (r() < 0.55) { g.fillStyle = r() < 0.5 ? '#ffd27a' : '#ffe9b8'; g.fillRect(x + 15, y + 17, 34, 28); } continue; }
+        g.fillStyle = 'rgba(0,0,0,0.07)'; g.fillRect(x, y + 60, 64, 4);
+        g.fillStyle = '#f4f6fa'; g.fillRect(x + 12, y + 14, 40, 34);
+        g.fillStyle = r() < 0.15 ? '#5f86b0' : '#93c6ee'; g.fillRect(x + 15, y + 17, 34, 28);
+        g.fillStyle = 'rgba(255,255,255,0.45)'; g.fillRect(x + 15, y + 17, 9, 28);
+        g.fillStyle = '#f4f6fa'; g.fillRect(x + 31, y + 17, 2, 28);
+      }
+    }));
+  }
+  return facadeCache.get(key);
+}
+function building(w, h, d, color, o = {}) {
+  const g = new THREE.Group(); const floors = Math.max(1, Math.round(h / 3.2));
+  const mk = (len) => {
+    const t = facade(color, false).clone(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(Math.max(1, Math.round(len / 3.4)) / 4, floors / 4); t.needsUpdate = true;
+    const m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 });
+    if (o.night) { const e = facade(color, true).clone(); e.wrapS = e.wrapT = THREE.RepeatWrapping; e.repeat.copy(t.repeat); e.needsUpdate = true; m.emissiveMap = e; m.emissive = new THREE.Color(0xffc870); m.emissiveIntensity = 1.2; }
+    return m;
+  };
+  const side = mk(d), front = mk(w), roof = M(0x6b7078);
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, roof, roof, front, front]); b.position.y = h / 2; b.castShadow = b.receiveShadow = true; g.add(b);
+  g.add(box(w + 0.4, 0.5, d + 0.4, 0xe9e9ee, 0, h + 0.05, 0, { r: 0.05 })); g.add(box(w - 0.9, 0.56, d - 0.9, 0x5a5f68, 0, h + 0.08, 0, { r: 0 }));
+  const r = rng(Math.round(w * 13 + h * 7 + d));
+  if (r() < 0.7) g.add(box(1.6, 1.0, 1.4, 0xb9bec6, (r() - 0.5) * (w - 3), h + 0.8, (r() - 0.5) * (d - 3)));
+  if (h > 12 && r() < 0.5) { const tk = cyl(1.1, 1.1, 2, 0x8a6a4a, 12); tk.position.set((r() - 0.5) * (w - 3), h + 1.6, (r() - 0.5) * (d - 3)); g.add(tk); }
+  if (o.shop) {
+    g.add(box(w * 0.8, 3.0, 0.3, 0x2b3440, 0, 1.5, d / 2 + 0.05));
+    g.add(box(w * 0.8 - 0.4, 2.6, 0.32, 0x9fd8ff, 0, 1.5, d / 2 + 0.06, { m: { roughness: 0.1, metalness: 0.3, ...(o.night ? { emissive: 0xffe0a0, emissiveIntensity: 0.8 } : {}) } }));
+    const aw = box(w * 0.86, 0.3, 2.0, o.awning ?? 0xff5d73, 0, 3.55, d / 2 + 0.9); aw.rotation.x = 0.22; g.add(aw);
+    for (let k = 0; k < 5; k++) g.add(box(w * 0.86 / 5 - 0.05, 0.31, 2.0, 0xffffff, -w * 0.43 + (k + 0.5) * w * 0.86 / 5, 3.56, d / 2 + 0.9, { r: 0 })).rotation.x = 0.22;
+    const sg = sign([o.shop], w * 0.7, 1.1, { bg: '#fff', fg: '#' + new THREE.Color(o.awning ?? 0xff5d73).getHexString() }); sg.position.set(0, 4.6, d / 2 + 0.03); g.add(sg);
+  }
+  return g;
+}
+function car(color, seed = 1) {
   const g = new THREE.Group();
-  g.add(plate(260, 260, mode === 'night' ? 0x2f7a43 : 0x4cc764, 0, 0, 0));
-  g.add(plate(260, 8, 0x5b5f66, 0, 0.05, 0, true));
-  for (const z of [-5.2, 5.2]) g.add(plate(260, 2.4, 0xc9c9cf, 0, 0.12, z, true));
-  for (let x = -120; x < 120; x += 6) g.add(box(2.4, 0.06, 0.4, 0xffffff, x, 0.08, 0, { cast: false, r: 0 }));
-  const cols = [[0xff8fab, 0xd62839], [0x7dd3fc, 0x2563eb], [0xfde68a, 0xf97316], [0xa7f3d0, 0x059669], [0xd8b4fe, 0x7c3aed], [0xfecaca, 0x7a4b2a]];
+  g.add(box(4.2, 1.1, 2.0, color, 0, 0.95, 0, { r: 0.25 })); g.add(box(2.3, 0.95, 1.8, 0xc9e8ff, -0.2, 1.95, 0, { r: 0.2, m: { roughness: 0.15, metalness: 0.3 } }));
+  for (const [x, z] of [[-1.35, 1], [1.35, 1], [-1.35, -1], [1.35, -1]]) { const w = cyl(0.45, 0.45, 0.35, 0x1b1b1f, 14); w.rotation.x = Math.PI / 2; w.position.set(x, 0.45, z); g.add(w); }
+  g.add(box(0.1, 0.3, 0.5, 0xfff3b0, 2.1, 1.0, 0.6, { m: { emissive: 0xfff0a0, emissiveIntensity: 0.5 } })); g.add(box(0.1, 0.3, 0.5, 0xfff3b0, 2.1, 1.0, -0.6, { m: { emissive: 0xfff0a0, emissiveIntensity: 0.5 } }));
+  return g;
+}
+function pole() { const g = new THREE.Group(); g.add(box(0.3, 9, 0.3, 0x6b5a48, 0, 4.5, 0)); g.add(box(2.6, 0.2, 0.2, 0x6b5a48, 0, 8.4, 0)); return g; }
+
+function buildTown(mode = 'day', opts = {}) {
+  const g = new THREE.Group(); const night = mode === 'night';
+  const R = rng(42);
+  g.add(plate(320, 320, night ? 0x2a6a3c : 0x56b866, 0, 0, 0));
+  const asphalt = night ? 0x1f2125 : 0x2f3236, walk = night ? 0x8a8d96 : 0xcfd0d6;
+  // main street
+  g.add(plate(320, 8, asphalt, 0, 0.05, 0, true));
+  for (const z of [-5.2, 5.2]) g.add(plate(320, 2.4, walk, 0, 0.12, z, true));
+  for (const z of [-3.75, 3.75]) g.add(box(320, 0.06, 0.18, 0xffffff, 0, 0.08, z, { cast: false, r: 0 }));
+  for (let x = -150; x < 150; x += 6) g.add(box(2.4, 0.06, 0.35, 0xffd23f, x, 0.08, 0, { cast: false, r: 0 }));
+  // back streets and cross streets
+  for (const z of [-22, 22, -46, 46]) { g.add(plate(320, 6, asphalt, 0, 0.04, z, true)); for (const e of [-2.8, 2.8]) g.add(box(320, 0.06, 0.15, 0xffffff, 0, 0.07, z + e, { cast: false, r: 0 })); }
+  for (const x of [-52, -26, 26, 52]) { g.add(plate(8, 320, asphalt, x, 0.06, 0, true)); for (const e of [-3.75, 3.75]) g.add(box(0.18, 0.06, 320, 0xffffff, x + e, 0.09, 0, { cast: false, r: 0 }));
+    for (const z of [-7.5, 7.5]) for (let k = -3; k <= 3; k++) g.add(box(0.9, 0.07, 3.2, 0xffffff, x + k * 1.2, 0.1, z, { cast: false, r: 0 })); }
+  const pastel = [0xf6e7a1, 0xf5b5c0, 0xb9a6f0, 0xa8d8f0, 0xbfe8c4, 0xf7c99a, 0xe4e4ec, 0x9fa9d9, 0xf2f2f2];
+  const shops = [['PIZZA', 0xff5d73], ['DONUTS', 0xff9ec7], ['HEADSHOTS', 0x2f7de1], ['WIGS & MORE', 0xb05cff], ['COSTUMES', 0x2bb3a6], ['DRAMA CLUB', 0xd62839], ['TAILOR', 0xf97316], ['SCRIPTS 4 U', 0x059669]];
   g.houses = [];
+  const clear = (side, x) => side === 1 && opts.clear && opts.clear(x);
+  let si = 0;
   for (let i = -6; i <= 6; i++) {
+    if (Math.abs(i) === 2 || Math.abs(i) === 4) continue; // cross streets
     for (const side of [-1, 1]) {
-      if (side === -1 && i === 0 && opts.sign) continue;
-      const hx = i * 13; if (side === 1 && opts.clear && opts.clear(hx)) continue;
-      const [c, r] = cols[(i + 6 + (side > 0 ? 3 : 0)) % 6];
-      const h = house(c, r); h.position.set(i * 13, 0, side * 15); if (side > 0) h.rotation.y = Math.PI; g.add(h); g.houses.push(h);
-      if (mode === 'night') for (const w of h.windows) { w.material = M(0xffe08a, { emissive: 0xffc94a, emissiveIntensity: 1.3 }); }
-      const t = tree(0.9); t.position.set(i * 13 + 6.5, 0, side * 10.5); g.add(t);
-      const l = lamp(mode === 'night'); l.position.set(i * 13 + 3, 0, side * 6.8); if (side > 0) l.rotation.y = Math.PI; g.add(l);
+      const x = i * 13;
+      const skipFront = (side === -1 && i === 0 && opts.sign) || clear(side, x);
+      const rot = side > 0 ? Math.PI : 0;
+      if (!skipFront) {
+        let b;
+        if (side === -1 && Math.abs(i) <= 1) { const [c, rf] = [[0xff8fab, 0xd62839], [0xa7f3d0, 0x059669], [0x7dd3fc, 0x2563eb]][i + 1]; b = house(c, rf); if (night) for (const w of b.windows) w.material = M(0xffe08a, { emissive: 0xffc94a, emissiveIntensity: 1.3 }); g.houses.push(b); b.position.set(x, 0, -15); }
+        else if (side === 1 && i === -3) { b = new THREE.Group(); b.add(plate(18, 18, 0x4cbf5c, 0, 0.14, 0, true)); b.add(box(18, 0.1, 2.2, 0xe7dcc4, 0, 0.2, 0, { r: 0 })); b.add(box(2.2, 0.1, 18, 0xe7dcc4, 0, 0.2, 0, { r: 0 }));
+          const f = cyl(2.4, 2.6, 0.9, 0xd9dde4, 20); f.position.y = 0.45; b.add(f); const wtr = cyl(2.0, 2.0, 0.1, 0x5ec8ff, 20); wtr.position.y = 0.92; b.add(wtr); const sp = cyl(0.3, 0.3, 2.2, 0xd9dde4, 10); sp.position.y = 1.4; b.add(sp);
+          for (const [tx, tz] of [[-6, -6], [6, -6], [-6, 6], [6, 6]]) { const t = tree(0.9, tx * 3 + tz); t.position.set(tx, 0, tz); b.add(t); }
+          const bb = new THREE.Group(); bb.add(box(0.4, 5, 0.4, 0x555555, -3, 2.5, 0)); bb.add(box(0.4, 5, 0.4, 0x555555, 3, 2.5, 0)); const bs = sign(['NOW CASTING:', 'EVERYONE!'], 7.4, 3.4, { bg: '#fff', colors: ['#2f7de1', '#d62839'] }); bs.position.set(0, 6.2, 0.05); bb.add(bs); bb.add(box(7.8, 3.8, 0.2, 0x333333, 0, 6.2, -0.1)); bb.position.set(0, 0, 6); bb.rotation.y = Math.PI; b.add(bb);
+          b.position.set(x, 0, 15); }
+        else { const isShop = R() < 0.55; const h = isShop ? 7 + Math.floor(R() * 2) * 3.2 : 9.6 + Math.floor(R() * 3) * 3.2; const w = 10 + R() * 1.5;
+          const sh = isShop ? shops[si++ % shops.length] : null;
+          b = building(w, h, 8, pastel[Math.floor(R() * pastel.length)], { night, shop: sh && sh[0], awning: sh && sh[1] }); b.position.set(x, 0, side * 15.5); b.rotation.y = rot; }
+        g.add(b);
+      }
+      if (!clear(side, x) && !(side === -1 && i === 0 && opts.sign)) {
+        const t = tree(0.8, i * 7 + side); t.position.set(x + 6.5, 0, side * 7.6); g.add(t);
+        const l = lamp(night); l.position.set(x + 3, 0, side * 6.8); if (side > 0) l.rotation.y = Math.PI; g.add(l);
+        const pl = pole(); pl.position.set(x - 4.5, 0, side * 6.9); g.add(pl);
+      }
+      // back row: taller apartments
+      if (!clear(side, x)) { const h = 12.8 + Math.floor(R() * 5) * 3.2; const b2 = building(11, h, 11, pastel[Math.floor(R() * pastel.length)], { night }); b2.position.set(x, 0, side * 31); b2.rotation.y = rot; g.add(b2); }
     }
   }
+  // downtown skyline to the north
+  const tw = new THREE.Group(); const t1 = building(11, 48, 11, 0xe8eef6, { night }); t1.position.x = -7.5; const t2 = building(11, 48, 11, 0xe8eef6, { night }); t2.position.x = 7.5; tw.add(t1, t2);
+  tw.add(box(4.6, 3, 4, 0xbfe3ff, 0, 36, 0, { m: { roughness: 0.1, metalness: 0.4, ...(night ? { emissive: 0xffe0a0, emissiveIntensity: 0.8 } : {}) } }));
+  const hs = sign(['HOLLYBLOCK STUDIOS'], 13, 2.2, { bg: '#d62839', fg: '#fff', glow: night }); hs.position.set(0, 42, 5.7); tw.add(hs);
+  tw.position.set(6, 0, -62); g.add(tw);
+  const hosp = building(20, 16, 12, 0xf4f4f6, { night }); const cross = new THREE.Group(); cross.add(box(1.2, 4, 0.3, 0xe02424, 0, 0, 0)); cross.add(box(4, 1.2, 0.3, 0xe02424, 0, 0, 0)); cross.position.set(7, 12.5, 6.2); hosp.add(cross);
+  const hsn = sign(['HOSPITAL'], 7, 1.4, { bg: '#fff', fg: '#e02424' }); hsn.position.set(-3, 12.5, 6.05); hosp.add(hsn); hosp.position.set(-40, 0, -60); g.add(hosp);
+  const R2 = rng(9);
+  for (const [x, z] of [[-70, -62], [-14, -64], [32, -60], [60, -62], [-80, -36], [84, -36], [-30, -80], [40, -82], [0, -92]]) { const b = building(12 + R2() * 6, 18 + R2() * 22, 12, pastel[Math.floor(R2() * pastel.length)], { night }); b.position.set(x, 0, z); g.add(b); }
+  const roofBB = new THREE.Group(); roofBB.add(box(0.4, 4, 0.4, 0x555555, -4, 2, 0)); roofBB.add(box(0.4, 4, 0.4, 0x555555, 4, 2, 0)); const rb = sign(['STAR IN YOUR', 'OWN LIFE'], 10, 4, { bg: '#ffd23f', colors: ['#111', '#d62839'] }); rb.position.set(0, 5.5, 0.05); roofBB.add(rb); roofBB.position.set(32, 30, -54); g.add(roofBB);
+  // parked cars along the curbs (kept away from the middle of the street where people walk)
+  const carCols = [0xff5d73, 0x2f7de1, 0xffd23f, 0x41c37a, 0xf2f2f2, 0x9b5de5, 0x333333];
+  let ci = 0;
+  for (const x of [-70, -44, -36, 36, 44, 64, 74]) for (const side of [-1, 1]) { if (clear(side, x)) continue; const c = car(carCols[ci++ % carCols.length]); c.position.set(x + (side > 0 ? 3 : 0), 0, side * 2.6); if (side > 0) c.rotation.y = Math.PI; g.add(c); }
+  for (const [x, z, ry] of [[-26, -30, Math.PI / 2], [26, 34, -Math.PI / 2], [52, -14, Math.PI / 2], [-52, 20, -Math.PI / 2]]) { const c = car(carCols[ci++ % carCols.length]); c.position.set(x + 2, 0, z); c.rotation.y = ry; g.add(c); }
   if (opts.sign) {
     const s = new THREE.Group();
     s.add(box(0.5, 8, 0.5, 0x7a4b2a, -6, 4, 0)); s.add(box(0.5, 8, 0.5, 0x7a4b2a, 6, 4, 0));
     s.add(box(14, 5.4, 0.5, 0xffffff, 0, 6.4, 0));
     const p = sign(['WELCOME TO', 'HOLLYBLOCK', 'POP: 100% ACTORS'], 13.4, 5, { bg: '#ffd23f', sizes: [150, 260, 130], colors: ['#111', '#d62839', '#111'] }); p.position.set(0, 6.4, 0.27); s.add(p);
-    s.add(box(1.2, 1.2, 1.2, 0xfff, 0, 0, 0, { cast: false }));
     s.position.set(0, 0, -11); g.add(s); g.sign = s;
   }
   return g;
@@ -471,7 +569,7 @@ function emptyHoodie(seed) { const g = new THREE.Group(); const r = rng(seed); g
 // ---------- light presets ----------
 function lights(p) {
   const P = {
-    day: { hs: 0xffffff, hg: 0x88aa66, hi: 1.5, sc: 0xfff4e0, si: 2.4, sp: [30, 50, 25], bg: SKY.day, fog: [0xbfe6ff, 80, 220] },
+    day: { hs: 0xffffff, hg: 0x88aa66, hi: 1.5, sc: 0xfff4e0, si: 2.4, sp: [30, 50, 25], bg: SKY.day, fog: [0xeedcc6, 75, 250] },
     sunset: { hs: 0xffc49b, hg: 0x6a4a8a, hi: 1.3, sc: 0xffa45b, si: 2.6, sp: [-40, 22, 30], bg: SKY.sunset, fog: [0xff9a4d, 70, 220] },
     night: { hs: 0x7a8dff, hg: 0x182040, hi: 1.1, sc: 0xb0c0ff, si: 1.3, sp: [-20, 40, 20], bg: SKY.night, fog: [0x1d2a66, 40, 160] },
     stage: { hs: 0xffe0c0, hg: 0x301010, hi: 0.9, sc: 0xfff0d0, si: 2.4, sp: [6, 30, 22], bg: SKY.dark, fog: null },
@@ -499,8 +597,8 @@ const K = (p, l, fov = 50) => ({ p: V(...p), l: V(...l), fov });
 
 const B = [];
 // 1 town aerial
-B[0] = () => { const root = buildTown('day', { sign: true, clear: x => Math.abs(x) < 14 }); const ppl = []; for (let i = 0; i < 6; i++) { const c = CAST.towny(i); c.position.set([-16, -11, -6.5, 6.5, 11, 16][i], 0, -8 + (i % 2) * 0.6); c.rotation.y = i % 2 ? -0.4 : 0.4; root.add(c); ppl.push(c); }
-  return { root, light: 'day', cam: (t, u) => camLerp(K([10, 46, 70], [0, 4, -8], 55), K([0, 7.5, 16], [0, 6.0, -11], 50), u, easeOut),
+B[0] = () => { const root = buildTown('day', { sign: true, clear: x => Math.abs(x) < 8 }); const ppl = []; for (let i = 0; i < 6; i++) { const c = CAST.towny(i); c.position.set([-16, -11, -6.5, 6.5, 11, 16][i], 0, -8 + (i % 2) * 0.6); c.rotation.y = i % 2 ? -0.4 : 0.4; root.add(c); ppl.push(c); }
+  return { root, light: 'day', cam: (t, u) => camLerp(K([24, 62, 88], [0, 8, -30], 55), K([0, 7.5, 16], [0, 6.0, -11], 50), u, (x) => ease(x) * 0.6 + easeOut(x) * 0.4),
     update: (t) => ppl.forEach((c, i) => { c.pose({ ...walkPose(t + i, 8, 0.6), rax: -2.6 + Math.sin(t * 8 + i) * 0.3 }); c.position.x = [-16, -11, -6.5, 6.5, 11, 16][i] + t * (i % 2 ? -0.8 : 0.8); c.rotation.y = i % 2 ? -Math.PI / 2 : Math.PI / 2; c.setFace(i % 2 ? 'drama' : 'joy', Math.sin(t * 12 + i) > 0); }) }; };
 // 2 mailman
 B[1] = () => { const root = buildTown('day', { clear: x => x > 3 && x < 30 }); const m = CAST.mail(); m.position.set(13, 0, 6.2); m.rotation.y = 0.28; root.add(m); const sk = skull(); m.hold('L', sk, 0, -0.3, 0.2);
