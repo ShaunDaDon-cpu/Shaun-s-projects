@@ -717,10 +717,29 @@ B[10] = () => { const root = buildTown('day', { clear: x => Math.abs(x) < 10, cl
       d.pose({ lax: -0.4, rax: -0.4, laz: 0.1, raz: 0.1, hy: lerp(0.1, -0.3, ease(seg(t, 0.3, 1.0))), bob: t > 1.55 ? Math.max(0, Math.sin(seg(t, 1.55, 1.85) * Math.PI)) * 0.5 : 0 });
       d.setFace(t < 1.55 ? 'shocked' : 'sob');
     } }; };
-// 12 forty robs
-B[11] = () => { const root = buildTown('day', { clear: x => Math.abs(x) < 10 }); const rs = []; for (let i = 0; i < 40; i++) { const r = CAST.rob(7); r.position.set((i % 8 - 3.5) * 3.2, 0, -Math.floor(i / 8) * 4 - 2); root.add(r); rs.push(r); }
-  return { root, light: 'day', cam: (t, u) => camLerp(K([0, 6, 16], [0, 4, -4], 50), K([0, 30, 12], [0, 0, -10], 52), u),
-    update: (t) => rs.forEach((r, i) => { r.position.z = -Math.floor(i / 8) * 4 - 2 + t * 2.8; r.pose(walkPose(t, 8, 0.6, { hz: 0.05 })); r.setFace(i === 13 ? 'sheepish' : 'brood'); }) }; };
+// 12 forty robs pour out of the warehouse
+function rollupWarehouse() {
+  const wh = new THREE.Group(); wh.position.set(0, 0, -16.5);
+  const corr = canvasTex(64, 64, (g) => { g.fillStyle = '#8a9098'; g.fillRect(0, 0, 64, 64); for (let x = 0; x < 64; x += 8) { g.fillStyle = '#737a83'; g.fillRect(x, 0, 3, 64); g.fillStyle = '#9ca2aa'; g.fillRect(x + 4, 0, 2, 64); } }); corr.wrapS = corr.wrapT = THREE.RepeatWrapping; corr.repeat.set(9, 2);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(18, 9.6, 10), new THREE.MeshStandardMaterial({ map: corr, roughness: 0.55, metalness: 0.35 })); body.position.y = 4.8; body.castShadow = body.receiveShadow = true; wh.add(body);
+  wh.add(box(19, 0.8, 11, 0x5d636c, 0, 9.9, 0, { r: 0.05 }));
+  for (const x of [-7, -5.2, 5.2, 7]) wh.add(box(1.2, 0.8, 0.1, 0x2a3440, x, 8.2, 5.02, { r: 0.02 }));
+  const nb = sign(['NO', 'ENTRY'], 1.4, 1.0, { bg: '#ffd23f' }); nb.position.set(-6.2, 3.0, 5.09); wh.add(nb);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 6.2), new THREE.MeshBasicMaterial({ color: 0xd8ecff, toneMapped: false })); glow.position.set(0, 3.1, 5.02); wh.add(glow);
+  wh.add(box(7.2, 0.6, 0.6, 0x3a3f48, 0, 6.5, 5.1)); wh.add(box(0.5, 6.4, 0.6, 0x3a3f48, -3.45, 3.2, 5.1)); wh.add(box(0.5, 6.4, 0.6, 0x3a3f48, 3.45, 3.2, 5.1));
+  const door = box(6.4, 1.0, 0.3, 0x7c838d, 0, 6.0, 5.15, { r: 0.02 }); wh.add(door);
+  wh.add(box(0.6, 0.4, 0.4, 0xffe9a8, 0, 7.3, 5.3, { m: { emissive: 0xffd27a, emissiveIntensity: 2 } }));
+  return wh;
+}
+B[11] = () => { const root = buildTown('day', { clear: x => Math.abs(x) < 10, clearN: x => Math.abs(x) < 8 }); root.add(rollupWarehouse());
+  const N = 40, lanes = [-1.6, 1.6, -4.8, 4.8, -8, 8, -11.2, 11.2]; const rs = [];
+  for (let i = 0; i < N; i++) { const r = CAST.rob(7); root.add(r); rs.push(r); }
+  return { root, light: 'day', cam: (t, u) => camLerp(K([0, 6, 18], [0, 4, -6], 50), K([0, 30, 14], [0, 0, -9], 52), u),
+    update: (t) => rs.forEach((r, i) => {
+      const a = t - (-2.6 + i * 0.105); if (a < 0) { r.visible = false; return; } r.visible = true;
+      const dist = a * 4.0; const lane = lanes[i % 8];
+      r.position.set(lane * ease(clamp(dist / 7)), 0, -12.2 + dist); r.rotation.y = 0;
+      r.pose(walkPose(t, 8, 0.6, { hz: 0.05 })); r.setFace(i === 13 ? 'sheepish' : 'brood'); }) }; };
 // 13 rob takes soap ad
 B[12] = () => { const root = buildStudio(0x7ee0b4, ['SUDZ', 'tough on grease!'], ['#ff4fa3', '#fff']); const r = CAST.rob(7); root.add(r); const sp = soap(); r.hold('L', sp, 0, -0.1, 0.5); const l = CAST.linda(); l.position.set(-3.4, 0, -1.2); l.rotation.y = 0.4; root.add(l); const bb = bubbles(30, 4, [8, 12, 3]); root.add(bb);
   return { root, light: 'studio', cam: (t, u) => camLerp(K([0.4, 5, 15], [-0.6, 4.2, 0], 46), K([-1.4, 5, 14], [-1.4, 4.2, 0], 46), u),
