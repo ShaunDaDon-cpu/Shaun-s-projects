@@ -1,6 +1,6 @@
 # In This Town
 
-A 90-second vertical (1080×1920, 60 fps) blocky-character animated short. In a town where everyone is an actor, Robert Pattinson clones start taking every role, until one family fights back.
+A 90-second vertical (1080×1920, 60 fps) blocky-character animated short. In a town where everyone is an actor, Robert Peterson clones start taking every role, until one family fights back.
 
 ## Files
 - `shots.json` holds the 32 shots, their timecodes and the caption lines. Side-character lines carry a `who` speaker tag.
