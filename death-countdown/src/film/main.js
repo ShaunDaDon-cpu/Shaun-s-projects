@@ -143,6 +143,7 @@ window.renderAt = (T) => {
   // speaking characters lip sync
   C.mom.talk = Math.max(C.mom.talk, talkLevel(T, 'MOM')); C.dad.talk = Math.max(C.dad.talk, talkLevel(T, 'DAD'));
   C.sis.talk = Math.max(C.sis.talk, talkLevel(T, 'SIS')); C.gma.talk = Math.max(C.gma.talk, talkLevel(T, 'GMA'));
+  if (W.clouds.visible) W.animTown(T);
   allRigs.forEach((r) => r.root.visible && r.updateFace(T));
   C.col.forEach((c) => { if (!c.root.visible) return; const key = c.screenMode + (c.screenMode === 'static' || c.screenMode === 'crack' ? Math.floor(T * 30) : ''); if (key !== c.screenKey) { c.screenKey = key; L.drawCollector(c.ctx, c.screenMode, T, heroFaceCanvas); c.tex.needsUpdate = true; } });
   camera.aspect = W_ / H_; camera.updateProjectionMatrix();

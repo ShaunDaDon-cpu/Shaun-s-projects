@@ -115,7 +115,7 @@ export function makeShots(X) {
   // 0 — establishing
   S.push({ line: 0, update(lt, d, T) {
     light('day', [0, 0, -5]); crowd(T + 3, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], { span: 70 });
-    const e = smooth(lt / d); cam(L.lerpV([24, 34, 52], [9, 7.5, 22], e), L.lerpV([0, 0, -12], [0, 3.2, -2], e), 46);
+    const e = smooth(lt / d); cam(L.lerpV([6, 38, 58], [3.5, 9, 30], e), L.lerpV([0, 0, -12], [0, 4, -4], e), 50);
   } });
   // 1 — phone countdown close
   S.push({ line: 1, update(lt, d, T) {
@@ -303,7 +303,7 @@ export function makeShots(X) {
     W.houses.forEach((hs) => {
       if (hs.z > 44) return; const on = lt > 0.15 + (44 - hs.z) * 0.014;
       if (on) { hs.plMat.color.set('#fff3c4'); hs.glow.material.opacity = 0.9; hs.winMat.color.set('#ffd27a'); }
-      if (on && n < 12 && hs.z > -40) { const e = C.ext[n]; const px = hs.side * 13.2; e.place(px, 0.15, hs.z + 1.4, hs.side > 0 ? -PI / 2 : PI / 2); e.expr = 'determined'; e.armR.rotation.x = -1.3; const fl = C.flashlights[n % 8]; if (n < 8) { fl.visible = true; fl.position.copy(e.handWorld('R')).add(new THREE.Vector3(-hs.side * 0.6, 0, 0)); } n++; }
+      if (on && n < 12 && hs.z > -40) { const e = C.ext[n]; const px = hs.side * 13.6; e.place(px, 0.15, hs.z + 1.4, hs.side > 0 ? -PI / 2 : PI / 2); e.expr = 'determined'; e.armR.rotation.x = -1.3; const fl = C.flashlights[n % 8]; if (n < 8) { fl.visible = true; fl.position.copy(e.handWorld('R')).add(new THREE.Vector3(-hs.side * 0.6, 0, 0)); } n++; }
     });
     const e = smooth(lt / d); cam([0, lerp(3.2, 15, e), lerp(46, 50, e)], [0, lerp(3, 1, e), -30], 46);
   } });

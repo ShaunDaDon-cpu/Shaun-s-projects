@@ -18,6 +18,11 @@ function tree(x, z, s = 1) {
   const l = box(3.2, 2.8, 3.2, '#3fbf5f', 0, 3.6, 0, 0.6); g.add(l); g.add(box(2.2, 1.8, 2.2, '#58d878', 0, 5.2, 0, 0.5));
   g.position.set(x, 0, z); g.scale.setScalar(s); return g;
 }
+function bigTree(x, z, s = 1) {
+  const g = new THREE.Group(); const t = cyl(0.7, 0.95, 6.5, '#8a5a35', 8); t.position.y = 3.25; g.add(t);
+  g.add(box(7.5, 5.5, 7.5, '#2f9e44', 0, 8.2, 0, 1.4), box(6.2, 4.2, 6.2, '#40c057', 0.6, 11.2, -0.3, 1.2), box(4.2, 3.2, 4.2, '#51cf66', -0.3, 13.6, 0.3, 1.0), box(3.6, 3.2, 3.6, '#37b24d', 2.8, 7.6, 1.8, 0.9));
+  g.position.set(x, 0, z); g.scale.setScalar(s); g.rotation.y = (x * 7 + z * 3) % 6; return g;
+}
 function lamp(x, z) { const g = new THREE.Group(); const p = cyl(0.12, 0.15, 6, '#4b4f63', 8); p.position.y = 3; g.add(p); g.add(box(1.1, 0.3, 0.5, '#4b4f63', 0.45, 6, 0)); const b = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.35), basic('#fff6c7')); b.position.set(0.6, 5.83, 0); g.add(b); g.position.set(x, 0, z); return g; }
 function cloud(x, y, z, s) { const g = new THREE.Group(); const m = basic('#ffffff'); [[0, 0, 0, 3], [2.4, -0.4, 0.3, 2.2], [-2.3, -0.5, 0, 2.3], [0.8, 1.2, -0.3, 2]].forEach(([a, b, c, r]) => { const k = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), m); k.position.set(a, b, c); g.add(k); }); g.position.set(x, y, z); g.scale.setScalar(s); return g; }
 
@@ -30,23 +35,51 @@ export function buildWorld(scene) {
   for (let z = -125; z < 130; z += 7) { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), basic('#ffd84a')); s.rotation.x = -Math.PI / 2; s.position.set(0, 0.04, z); town.add(s); }
   [-7.5, 7.5].forEach((x) => { const sw = box(5, 0.3, 260, '#d9d6e3', x, 0.15, 0); sw.castShadow = false; town.add(sw); });
   const R = rng(9);
-  for (let i = 0; i < 18; i++) {
+  // big two-storey houses (people are ~6.5 units tall; houses ~16-19, trees ~12-17)
+  for (let i = 0; i < 14; i++) {
     for (const side of [-1, 1]) {
-      const z = -110 + i * 13; const x = side * 19; const w = 9 + R() * 2, d = 8, h = 5 + R() * 1.5;
+      const z = -112 + i * 18; const w = 13 + R() * 3, d = 12, h = 11 + R() * 3; const x = side * (15.5 + d / 2);
       const hg = new THREE.Group(); hg.position.set(x, 0, z); hg.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-      const col = HOUSE_COLS[(i * 2 + (side > 0 ? 1 : 0)) % HOUSE_COLS.length];
-      hg.add(box(w, h, d, col, 0, h / 2, 0)); const rf = roofMesh(w + 1, d + 1, ROOF_COLS[(i + (side > 0 ? 3 : 0)) % ROOF_COLS.length]); rf.position.y = h + 1.6; hg.add(rf);
-      hg.add(box(1.6, 3, 0.2, '#6b3f22', 0, 1.5, d / 2 + 0.05));
+      const col = HOUSE_COLS[(i * 2 + (side > 0 ? 1 : 0)) % HOUSE_COLS.length]; const rcol = ROOF_COLS[(i + (side > 0 ? 3 : 0)) % ROOF_COLS.length];
+      hg.add(box(w, h, d, col, 0, h / 2, 0)); hg.add(box(w + 0.3, 0.5, d + 0.3, '#ffffff', 0, h * 0.5, 0));
+      const rf = roofMesh(w + 1.6, d + 1.6, rcol); rf.scale.y = 1.8; rf.position.y = h + 2.8; hg.add(rf);
+      hg.add(box(1.4, 4, 1.4, '#9c4a3a', w * 0.28, h + 3.2, -1.5));
       const winMat = new THREE.MeshBasicMaterial({ color: '#2b3550' });
-      [-w / 3, w / 3].forEach((wx) => { const wm = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.6, 0.15), winMat); wm.position.set(wx, h * 0.55, d / 2 + 0.05); hg.add(wm); hg.add(box(2.1, 0.2, 0.3, '#ffffff', wx, h * 0.55 - 0.9, d / 2 + 0.1)); });
-      const plMat = new THREE.MeshBasicMaterial({ color: '#3a3a30' }); const pl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.4), plMat); pl.position.set(1.4, 3.3, d / 2 + 0.25); hg.add(pl);
-      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffcf6b', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); glow.scale.set(6, 6, 1); glow.position.set(1.4, 3.3, d / 2 + 0.6); hg.add(glow);
-      hg.add(box(4, 0.15, 3, '#c8b89a', 0, 0.08, d / 2 + 1.5));
+      const win = (wx, wy) => { const wm = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.4, 0.15), winMat); wm.position.set(wx, wy, d / 2 + 0.05); hg.add(wm);
+        hg.add(box(2.6, 0.25, 0.35, '#ffffff', wx, wy - 1.3, d / 2 + 0.12), box(2.6, 0.25, 0.25, '#ffffff', wx, wy + 1.3, d / 2 + 0.1), box(0.2, 2.4, 0.25, '#ffffff', wx, wy, d / 2 + 0.1));
+        [-1.5, 1.5].forEach((sx) => hg.add(box(0.7, 2.6, 0.2, rcol, wx + sx, wy, d / 2 + 0.1))); };
+      [-w / 3, w / 3].forEach((wx) => { win(wx, h * 0.27 + 0.4); win(wx, h * 0.75); }); win(0, h * 0.75);
+      hg.add(box(2.4, 4.6, 0.25, '#6b3f22', 0, 2.3, d / 2 + 0.08), box(3.0, 0.35, 0.4, '#ffffff', 0, 4.75, d / 2 + 0.15), box(0.25, 0.25, 0.4, '#ffd43b', 0.8, 2.3, d / 2 + 0.25));
+      hg.add(box(4.8, 0.3, 2.2, '#ffffff', 0, 5.4, d / 2 + 1.1), box(0.3, 5.2, 0.3, '#ffffff', -2.2, 2.6, d / 2 + 2.0), box(0.3, 5.2, 0.3, '#ffffff', 2.2, 2.6, d / 2 + 2.0));
+      hg.add(box(4.4, 0.4, 2.2, '#c8b89a', 0, 0.2, d / 2 + 1.1), box(2.6, 0.12, 4.4, '#c8b89a', 0, 0.06, d / 2 + 4.4));
+      const plMat = new THREE.MeshBasicMaterial({ color: '#3a3a30' }); const pl = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), plMat); pl.position.set(1.8, 4.2, d / 2 + 0.3); hg.add(pl);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffcf6b', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); glow.scale.set(7, 7, 1); glow.position.set(1.8, 4.2, d / 2 + 0.7); hg.add(glow);
+      [-1, 1].forEach((sx) => { for (let b = 0; b < 3; b++) hg.add(box(1.8 + R() * 0.6, 1.4 + R() * 0.6, 1.6, ['#2f9e44', '#37b24d', '#40c057'][b], sx * (2.8 + b * 1.9), 0.75, d / 2 + 0.9, 0.55)); });
+      if (R() < 0.6) { hg.add(box(0.15, 1.6, 0.15, '#495057', 1.9, 0.8, d / 2 + 6.3), box(0.8, 0.6, 1.0, ['#e03131', '#1c7ed6', '#2f9e44'][i % 3], 1.9, 1.8, d / 2 + 6.3, 0.15)); }
+      for (let f = -w / 2; f <= w / 2; f += 1.3) { if (Math.abs(f) < 1.8) continue; hg.add(box(0.25, 1.4, 0.2, '#ffffff', f, 0.7, d / 2 + 6.9)); }
+      hg.add(box(w / 2 - 1.6, 0.2, 0.15, '#ffffff', -w / 4 - 0.9, 1.1, d / 2 + 6.9), box(w / 2 - 1.6, 0.2, 0.15, '#ffffff', w / 4 + 0.9, 1.1, d / 2 + 6.9));
       town.add(hg); W.houses.push({ g: hg, winMat, plMat, glow, x, z, side });
-      if (i % 2 === 0) town.add(tree(side * 11.5, z + 6, 0.9 + R() * 0.3));
-      if (i % 3 === 1) { const l = lamp(side * 10.3, z); if (side > 0) l.rotation.y = Math.PI; town.add(l); }
+      if (i % 2 === 0) town.add(bigTree(side * 13.6, z + 9, 0.8 + R() * 0.2));
+      town.add(bigTree(side * (31 + R() * 6), z + (R() - 0.5) * 10, 1.0 + R() * 0.5));
+      if (i % 2 === 1) { const l = lamp(side * 10.3, z + 9); l.scale.setScalar(1.45); if (side > 0) l.rotation.y = Math.PI; town.add(l); }
     }
   }
+  // background woods beyond the back yards
+  for (let k = 0; k < 90; k++) { const sd = k % 2 ? 1 : -1; town.add(bigTree(sd * (42 + R() * 60), -140 + R() * 280, 1.1 + R() * 0.7)); }
+  // birds (V flocks) + more clouds, animated in W.animTown
+  W.birds = [];
+  const birdMat = basic('#2b2d42');
+  const flock = (n, path) => { for (let k = 0; k < n; k++) { const b = new THREE.Group(); b.add(box(0.5, 0.35, 1.1, null, 0, 0, 0, 0.1, birdMat));
+      const wl = new THREE.Group(), wr = new THREE.Group(); wl.add(box(1.8, 0.1, 0.7, null, -0.9, 0, 0, 0, birdMat)); wr.add(box(1.8, 0.1, 0.7, null, 0.9, 0, 0, 0, birdMat)); b.add(wl, wr);
+      b.scale.setScalar(2.0); town.add(b); W.birds.push({ b, wl, wr, k, path }); } };
+  flock(5, { o: [126, 27, -50], v: [7, 0, 0] }); flock(4, { o: [55, 38, 120], v: [0, 0, -6.5] }); flock(5, { o: [-72, 22, 6], v: [-6, 0, 0] }); flock(3, { o: [-30, 34, -40], v: [5, 0, 3] });
+  W.animTown = (T) => {
+    W.birds.forEach(({ b, wl, wr, k, path }) => { const o = path.o, v = path.v; const sp = Math.hypot(v[0], v[2]); const dx = v[0] / sp, dz = v[2] / sp;
+      const off = (k % 2 ? 1 : -1) * Math.ceil(k / 2); const along = -Math.abs(off) * 2.6, side = off * 2.4;
+      const t = ((T * sp) % 280 + 280) % 280 - 140; b.position.set(o[0] + dx * (t + along) - dz * side, o[1] + Math.sin(T * 2 + k) * 0.6, o[2] + dz * (t + along) + dx * side);
+      b.rotation.y = Math.atan2(dx, dz); const fl = Math.sin(T * 9 + k * 1.3) * 0.6; wl.rotation.z = fl; wr.rotation.z = -fl; });
+    W.clouds.children.forEach((c, i) => { if (!c.userData.b) c.userData.b = c.position.clone(); const b = c.userData.b; c.position.x = ((b.x + T * (2.5 + (i % 3) * 0.8) + 200) % 400) - 200; });
+  };
   // bus stop
   const stop = new THREE.Group(); stop.position.set(8.5, 0.3, -8);
   stop.add(box(0.2, 4, 0.2, '#4b4f63', -2, 2, -1), box(0.2, 4, 0.2, '#4b4f63', 2, 2, -1), box(4.8, 0.2, 2.4, '#3b5bdb', 0, 4.1, -0.2), box(4.4, 3.4, 0.1, '#bfe6ff', 0, 2.1, -1.2), box(3.6, 0.3, 1, '#8a5a35', 0, 1.2, -0.6));
@@ -58,7 +91,7 @@ export function buildWorld(scene) {
   const cd2 = new THREE.Mesh(new THREE.CircleGeometry(2.2, 24), mat('#4a3020')); cd2.rotation.x = -Math.PI / 2; cd2.position.y = 0.07; crater.add(cd2);
   for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; const b = box(1 + (k % 3) * 0.3, 0.6 + (k % 2) * 0.4, 0.9, '#7d5836', Math.cos(a) * 3.4, 0.3, Math.sin(a) * 3.4, 0.15); b.rotation.y = a; b.rotation.z = 0.3; crater.add(b); }
   town.add(crater); W.crater = crater;
-  W.clouds = new THREE.Group(); [[-60, 60, -150, 3], [40, 70, -170, 4], [90, 50, -120, 2.5], [-110, 55, -60, 3], [0, 80, -220, 5], [70, 65, 60, 3]].forEach((c) => W.clouds.add(cloud(...c))); town.add(W.clouds);
+  W.clouds = new THREE.Group(); [[-60, 60, -150, 3], [40, 70, -170, 4], [90, 50, -120, 2.5], [-110, 55, -60, 3], [0, 80, -220, 5], [70, 65, 60, 3], [-150, 62, 20, 3.5], [150, 58, -40, 3], [20, 72, 90, 3.2], [-80, 66, -110, 2.6], [120, 75, 60, 4], [-30, 58, -60, 2.2], [60, 64, -60, 2.8], [-120, 70, 100, 3.6], [110, 52, -200, 3.8], [-20, 66, 30, 2.4]].forEach((c) => W.clouds.add(cloud(...c))); town.add(W.clouds);
 
   // ---------- SKY (skydive) ----------
   const sky = new THREE.Group(); sky.position.copy(SET.sky); scene.add(sky); W.skyG = sky;
