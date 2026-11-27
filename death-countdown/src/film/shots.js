@@ -369,13 +369,19 @@ export function makeShots(X) {
   S.push({ line: 21, update(lt, d, T) {
     houseNight(); W.door.position.copy(H(-0.3, 0.2, 3.6)); W.door.rotation.set(-1.45, 0.5, 0.25); W.door.visible = false; W.doorCrack.material.opacity = 1;
     const ti = word(21, 'tackled') - (T - lt) + 0.25; const ic = ti + 0.3; const dd = C.dad; const c = C.col[1];
-    const run = seg(lt, 0, ti - 0.25); let dz = lerp(11.5, 8.3, run), dy = 0;
-    dd.expr = 'angry';
-    if (lt < ti - 0.25) { dd.walk(T * 12, 0.9); dd.upper.rotation.x = 0.3; }
-    else { const fly = seg(lt, ti - 0.25, ic + 0.5); dz = lerp(8.3, 0.2, easeOut(fly)); dy = Math.sin(fly * PI) * 0.9 - fly * 1.4; dd.hips.rotation.x = 1.4; dd.armL.rotation.x = dd.armR.rotation.x = -PI; dd.expr = 'yell'; }
-    dd.place(H(-4, 0, dz).x, Math.max(dy, -1.4), H(0, 0, dz).z, PI);
-    const pushed = lt > ti; const pz = pushed ? lerp(5.6, -0.6, easeOut(seg(lt, ti, ic + 0.5))) : 5.6;
-    c.place(H(-4, 0, pz).x, pushed ? -easeIn(seg(lt, ti, ic + 0.5)) * 1.9 : 0, H(0, 0, pz).z, 0); c.screenMode = 'face'; if (pushed) { c.hips.rotation.x = -1.4 * easeOut(seg(lt, ti, ti + 0.35)); c.armL.rotation.z = -1.8; c.armR.rotation.z = 1.8; }
+    // run -> lunge -> wrap arms around the Collector -> both topple backwards together through the couch
+    c.place(H(-4, 0, 5.6).x, 0, H(0, 0, 5.6).z, 0); c.screenMode = 'face';
+    if (lt < ti) {
+      const lunge = seg(lt, ti - 0.18, ti); const run = seg(lt, 0, ti - 0.18); const z = lerp(11.5, 7.9, run) - 0.8 * lunge;
+      dd.place(H(-4, 0, z).x, 0, H(0, 0, z).z, PI); if (lunge <= 0) { dd.walk(T * 12, 0.9); dd.upper.rotation.x = 0.3; } dd.root.rotation.x = -0.55 * lunge; dd.armL.rotation.x = dd.armR.rotation.x = -1.6 * lunge; dd.expr = lunge > 0 ? 'yell' : 'angry';
+      c.armL.rotation.x = c.armR.rotation.x = -0.5; c.armL.rotation.z = -0.3; c.armR.rotation.z = 0.3;
+    } else {
+      const f = easeIn(seg(lt, ti, ic + 0.35)); const a = 1.5 * f;
+      c.root.rotation.x = -a; c.root.position.z = H(0, 0, 5.6 - 0.9 * f).z; c.armL.rotation.z = -1.6 * f - 0.3; c.armR.rotation.z = 1.6 * f + 0.3; c.headG.rotation.x = -0.4 * f;
+      const W2 = new THREE.Vector3(); c.root.updateMatrixWorld(true); c.torso.getWorldPosition(W2); const n = new THREE.Vector3(0, Math.sin(a), Math.cos(a)); const Tg = W2.clone().addScaledVector(n, 0.95).add(new THREE.Vector3(0, 0.35, 0));
+      dd.place(0, 0, 0, PI); dd.root.rotation.x = -(a + 0.55); dd.armL.rotation.x = dd.armR.rotation.x = -1.55; dd.armL.rotation.z = 0.55; dd.armR.rotation.z = -0.55; dd.legL.rotation.x = 0.5 + 0.3 * Math.sin(T * 14); dd.legR.rotation.x = 0.3 - 0.3 * Math.sin(T * 14); dd.expr = 'yell';
+      dd.root.updateMatrixWorld(true); const chest = new THREE.Vector3(0, 1.3, 0.45); dd.upper.localToWorld(chest); dd.root.position.copy(Tg).sub(chest);
+    }
     if (lt > ic) { const kc = easeOut(seg(lt, ic, ic + 0.7)); W.couchL.position.set(-2.8 * kc, Math.sin(kc * PI) * 1.6, -0.6 * kc); W.couchL.rotation.z = 0.7 * kc; W.couchR.position.set(2.8 * kc, Math.sin(kc * PI) * 1.6, -0.6 * kc); W.couchR.rotation.z = -0.7 * kc; }
     burst(W.dust, H(-4, 1.2, 2), lt - ic, { speed: 9, life: 1.3, size: 1.2, seed: 21 });
     cam(H(lerp(5, 4.4, lt / d), 7, 11.3), H(-4, 2.4, 4.4), 56, { shake: imp(lt, ic, 0.6, 0.5), T }); UI.flash(imp(lt, ic, 0.12, 0.5));

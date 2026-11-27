@@ -306,7 +306,7 @@ export function buildWorld(scene) {
   [W.couchL, W.couchR].forEach((g, i) => { const s = i ? 1 : -1; g.add(box(3.6, 1.4, 3.2, '#6c63ff', s * 1.8, 0.9, 0, 0.2), box(3.6, 2.4, 0.9, '#5a52e0', s * 1.8, 2, -1.3, 0.25), box(0.8, 2, 3.2, '#5a52e0', s * 3.6, 1.2, 0, 0.25)); W.couch.add(g); });
   W.couch.position.set(-4, 0, 2); H.add(W.couch);
   // TV + stand
-  H.add(box(5, 1.2, 1.4, '#3d3d4e', -4, 0.6, -10.8)); W.tv = new THREE.Mesh(new THREE.BoxGeometry(5.6, 3.2, 0.25), basic('#1a1d2b')); W.tv.position.set(-4, 3, -11.2); H.add(W.tv);
+  H.add(box(5, 1.2, 1.4, '#3d3d4e', -4, 0.6, -10.8)); W.tv = new THREE.Mesh(new THREE.BoxGeometry(5.6, 3.2, 0.25), basic('#111')); W.tv.position.set(-4, 3, -11.2); H.add(W.tv); { const tt = textTex(320, 180, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1864ab'); g.addColorStop(1, '#4dabf7'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.font = '700 26px Fredoka'; c.fillText('LATE NIGHT TOONS', 18, 36); c.fillStyle = '#ffd43b'; c.beginPath(); c.arc(240, 110, 34, 0, 7); c.fill(); c.fillStyle = '#212529'; c.fillRect(226, 98, 8, 10); c.fillRect(248, 98, 8, 10); c.fillStyle = '#ff6b6b'; c.fillRect(60, 80, 90, 70); c.fillStyle = '#fff'; c.fillRect(0, 160, w, 20); c.fillStyle = '#e03131'; c.font = '700 14px Fredoka'; c.fillText('● LIVE   weather: stormy night', 8, 175); }); const ts = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.9), new THREE.MeshBasicMaterial({ map: tt })); ts.position.set(-4, 3, -11.06); H.add(ts); }
   // stairs
   for (let k = 0; k < 10; k++) H.add(box(4, 0.8 * (k + 1), 1.6, '#a0785a', 12.8, 0.4 * (k + 1), 9 - k * 1.6));
   H.add(box(0.25, 3, 16, '#fff', 10.7, 5.5, 1.8).rotateX(-0.47));
@@ -320,7 +320,38 @@ export function buildWorld(scene) {
   W.armchair = new THREE.Group(); W.armchair.add(box(3.4, 1.4, 3, '#2f9e44', 0, 0.9, 0, 0.25), box(3.4, 2.8, 0.8, '#2b8a3e', 0, 2.2, -1.2, 0.25), box(0.7, 2, 3, '#2b8a3e', -1.7, 1.3, 0, 0.2), box(0.7, 2, 3, '#2b8a3e', 1.7, 1.3, 0, 0.2));
   W.armchair.position.set(6.5, 0, 0); W.armchair.rotation.y = -0.5; H.add(W.armchair);
   // pictures
-  [[-8, 6], [-3, 6.5], [3, 6]].forEach(([x, y], i) => H.add(box(2.2, 2.6, 0.15, ['#ffd43b', '#74c0fc', '#ff8787'][i], x, y, -11.75)));
+  // ---- family photos + living room dressing ----
+  { const fam = (c, w, h, who, bg) => { c.fillStyle = bg; c.fillRect(0, 0, w, h); c.fillStyle = '#7bc96f'; c.fillRect(0, h * 0.78, w, h * 0.22);
+      const n = who.length; who.forEach(([shirt, hair, sc], i) => { const x = w * (i + 0.5) / n, s2 = sc * h / 260, base = h * 0.92;
+        c.fillStyle = '#2b2f45'; c.fillRect(x - 22 * s2, base - 50 * s2, 44 * s2, 50 * s2); c.fillStyle = shirt; c.fillRect(x - 26 * s2, base - 100 * s2, 52 * s2, 52 * s2);
+        c.fillStyle = '#f5c99b'; c.fillRect(x - 20 * s2, base - 142 * s2, 40 * s2, 40 * s2); c.fillStyle = hair; c.fillRect(x - 22 * s2, base - 148 * s2, 44 * s2, 12 * s2);
+        c.fillStyle = '#111'; c.fillRect(x - 10 * s2, base - 128 * s2, 5 * s2, 6 * s2); c.fillRect(x + 5 * s2, base - 128 * s2, 5 * s2, 6 * s2); c.strokeStyle = '#111'; c.lineWidth = 2.5 * s2; c.beginPath(); c.arc(x, base - 118 * s2, 8 * s2, 0.2, 2.9); c.stroke(); }); };
+    const DAD = ['#1c7ed6', '#2b1a10', 1.15], MOM = ['#e64980', '#7a3e1d', 1.05], SIS = ['#20c997', '#5a3418', 0.85], ME = ['#ff8c1a', '#4a2f1d', 0.9], GMA = ['#9c36b5', '#d9d9e3', 1.0];
+    const photo = (w, h, x, y, z, ry, who, bg, frame = '#c08457') => { const t = textTex(Math.round(w * 64), Math.round(h * 64), (c, W2, H2) => fam(c, W2, H2, who, bg)); const g = new THREE.Group(); g.add(box(w + 0.35, h + 0.35, 0.12, frame, 0, 0, -0.04)); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: t, emissive: new THREE.Color(0.35, 0.35, 0.35), emissiveMap: t })); m.position.z = 0.03; g.add(m); g.position.set(x, y, z); g.rotation.y = ry; H.add(g); return g; };
+    photo(3.4, 2.4, -8.5, 6.2, -11.72, 0, [DAD, MOM, SIS, ME], '#a5d8ff'); photo(2.0, 2.6, -1.0, 6.6, -11.72, 0, [GMA], '#ffe8cc', '#ffd43b'); photo(2.6, 2.0, 2.6, 5.9, -11.72, 0, [ME, SIS], '#d3f9d8');
+    photo(6.0, 3.8, -14.72, 6.6, 4.8, Math.PI / 2, [GMA, DAD, MOM, SIS, ME], '#ffd8a8', '#a9744f');
+    // dresser with standing photo frames + plant (left wall)
+    H.add(box(2.2, 3.2, 5.4, '#8a5a35', -13.8, 1.6, 4.8)); for (let k = 0; k < 3; k++) { H.add(box(0.1, 0.8, 5.0, '#a9744f', -12.66, 0.7 + k * 1.0, 4.8)); H.add(box(0.15, 0.15, 0.6, '#ffd43b', -12.6, 0.7 + k * 1.0, 4.8)); }
+    [[-13.9, 3.3], [-13.9, 5.3]].forEach(([x, z], i) => { const f = photo(0.9, 1.1, x, 3.85, z, Math.PI / 2 - 0.2, i ? [ME] : [MOM, DAD], i ? '#ffec99' : '#e7f5ff', '#e9ecef'); f.rotation.z = 0; f.rotation.x = -0.12; });
+    const pot = (x, z, s, col = '#c2410c') => { const g = new THREE.Group(); const p2 = cyl(0.6, 0.45, 1.1, col, 12); p2.position.y = 0.55; g.add(p2); g.add(box(1.6, 1.4, 1.6, '#2f9e44', 0, 1.8, 0, 0.6), box(1.1, 1.3, 1.1, '#40c057', 0.2, 2.8, -0.1, 0.5), box(0.8, 1.0, 0.8, '#37b24d', -0.3, 3.5, 0.2, 0.35)); g.position.set(x, 0, z); g.scale.setScalar(s); H.add(g); return g; };
+    pot(-13.6, 10.5, 1.3); pot(9.4, 10.6, 1.1, '#1c7ed6'); pot(1.6, -10.6, 1.0, '#f8f9fa'); pot(-13.8, -6.3, 0.9, '#7048e8'); const sp = pot(-14, 3.25, 0.35); sp.position.y = 3.2;
+    // window with curtains (left wall)
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4), basic('#16205a')); win.position.set(-14.76, 5.6, -3.0); win.rotation.y = Math.PI / 2; H.add(win);
+    H.add(box(0.2, 0.25, 4.8, '#fff', -14.7, 3.5, -3.0), box(0.2, 4.2, 0.25, '#fff', -14.7, 5.6, -3.0), box(0.2, 0.25, 4.8, '#fff', -14.7, 7.7, -3.0), box(0.3, 0.2, 7.2, '#495057', -14.6, 8.4, -3.0));
+    [-5.6, -0.4].forEach((z) => H.add(box(0.3, 5.4, 1.6, '#c92a2a', -14.5, 5.6, z, 0.2)));
+    const moonS = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16), basic('#fff8d6')); moonS.position.set(-14.74, 6.8, -2.2); moonS.rotation.y = Math.PI / 2; H.add(moonS);
+    // bookshelf (back wall right)
+    H.add(box(4.4, 7, 1.5, '#a9744f', 6.4, 3.5, -11.1)); for (let r = 0; r < 4; r++) { H.add(box(4.0, 0.2, 1.4, '#8a5a35', 6.4, 0.9 + r * 1.7, -11.0)); for (let b = 0; b < 7; b++) H.add(box(0.45, 1.1 + (b % 3) * 0.15, 1.0, ['#e03131', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#ffd43b'][(b + r * 2) % 6], 4.8 + b * 0.52, 1.6 + r * 1.7, -10.9)); }
+    // wall clock
+    const ck = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.2, 24), new THREE.MeshLambertMaterial({ map: textTex(128, 128, (c) => { c.fillStyle = '#fff'; c.fillRect(0, 0, 128, 128); c.strokeStyle = '#212529'; c.lineWidth = 8; c.beginPath(); c.arc(64, 64, 58, 0, 7); c.stroke(); c.lineWidth = 6; c.beginPath(); c.moveTo(64, 64); c.lineTo(64, 24); c.moveTo(64, 64); c.lineTo(84, 60); c.stroke(); }) }));
+    ck.rotation.x = Math.PI / 2; ck.position.set(2.6, 8.4, -11.7); H.add(ck);
+    // side tables + table lamps by the couch
+    [-8.2, 0.2].forEach((x) => { H.add(box(1.6, 1.8, 1.6, '#a9744f', x, 0.9, 1.6)); const st = cyl(0.12, 0.2, 1.0, '#495057', 8); st.position.set(x, 2.3, 1.6); H.add(st); const sh = cyl(0.5, 0.75, 0.8, '#fff3bf', 14); sh.position.set(x, 3.1, 1.6); H.add(sh);
+      const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffd38a', transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending })); g.scale.set(3, 3, 1); g.position.set(x, 3.1, 1.6); H.add(g); });
+    // coat rack + doormat by the front door
+    const cr = cyl(0.1, 0.12, 6, '#5c3d2e', 8); cr.position.set(-4.2, 3, 10.8); H.add(cr); H.add(box(1.0, 0.15, 1.0, '#5c3d2e', -4.2, 0.08, 10.8), box(1.4, 2.6, 0.5, '#e8590c', -4.0, 4.4, 10.8, 0.2), box(1.0, 0.4, 1.0, '#343a40', -4.4, 6.1, 10.8, 0.15));
+    const mat2 = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.6), mat('#8a5a35')); mat2.rotation.x = -Math.PI / 2; mat2.position.set(0, 0.03, 10.6); H.add(mat2);
+  }
   // remote, pan
   W.remote = box(0.35, 0.15, 1, '#212529'); scene.add(W.remote);
   W.pan = new THREE.Group(); const pn = cyl(0.9, 0.75, 0.25, '#343a40', 20); W.pan.add(pn); W.pan.add(box(0.25, 0.15, 1.8, '#5c3d2e', 0, 0, 1.6)); scene.add(W.pan);
