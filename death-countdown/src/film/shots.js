@@ -1,6 +1,6 @@
 // Shot list for "Death Countdown". Each shot: update(localTime, duration, absoluteTime).
 export function makeShots(X) {
-  const { THREE, L, camera, W, C, SET, UI, light, fx, fx2, hemi, lines } = X;
+  const { THREE, L, camera, W, C, SET, UI, light, fx, fx2, hemi, lines, doorHome } = X;
   const { clamp, lerp, smooth, easeOut, easeIn, seg, YEAR } = L;
   const PI = Math.PI;
   const v = (a) => (a.isVector3 ? a.clone() : new THREE.Vector3(a[0], a[1], a[2]));
@@ -287,15 +287,19 @@ export function makeShots(X) {
     if (T < ov - 0.15) { const u = smooth(seg(lt, 0, ov - 0.15 - (T - lt))); const tgt = u < 0.5 ? body(0).lerp(body(1), u * 2) : body(1).lerp(body(2), u * 2 - 1); cam(tgt.clone().add(new THREE.Vector3(0, 0.4, -8.0)), tgt, 70); }
     else { const k = easeOut(seg(T, ov - 0.15, ov + 0.6)); const hp = head(1); cam(hp.clone().add(new THREE.Vector3(0, -0.1, lerp(-8.4, -3.8, k))), hp.clone().add(new THREE.Vector3(0, lerp(-2.0, 0, k), 0)), lerp(70, 40, k), { shake: imp(T, ov - 0.1, 0.4, 0.15), T }); UI.flash(imp(T, ov - 0.12, 0.25, 0.5), '#ff2240'); }
   } });
-  // 15 — Dad: Nobody opens that door!
+  // 15 — Dad: door already shut; he sprints over and braces it with his back while the Collectors bang on it
   S.push({ line: 15, update(lt, d, T) {
-    houseNight(); const slam = 0.32;
-    W.door.rotation.y = lerp(1.2, 0, easeIn(seg(lt, 0, slam)));
-    C.col.forEach((c, i) => { c.place(H([-1.8, 0.6, 2.8][i], 0, 0).x, 0.4, H(0, 0, [16.4, 17.5, 16.8][i]).z, PI); c.screenMode = 'face'; });
-    const dd = C.dad; if (lt < slam + 0.05) { dd.place(H(1.6, 0, 10.4).x, 0, H(0, 0, 10.4).z, 0.3); dd.armL.rotation.x = dd.armR.rotation.x = -1.5; dd.upper.rotation.x = 0.25; dd.expr = 'determined'; }
-    else { dd.place(H(0, 0, 11.0).x, 0, H(0, 0, 11.0).z, PI); dd.armL.rotation.z = -1.35; dd.armR.rotation.z = 1.35; dd.expr = 'yell'; dd.headG.rotation.x = -0.08; }
-    cam(H(0.6, 1.5, 3.8), H(0, 4.6, 11), 50, { shake: imp(lt, slam, 0.5, 0.35), T });
-    sfx('SLAM!', 560, 420, 170, (lt - slam) / 0.8, '#fff', -8);
+    houseNight(); const arrive = 0.5; const bangs = [0.2, 0.58, 0.95, 1.3];
+    let jolt = 0, crack = 0; bangs.forEach((b, i) => { jolt += imp(lt, b, 0.18, 1); if (lt >= b) crack = (i + 1) / bangs.length; });
+    W.door.rotation.set(0, 0, 0); W.door.position.copy(doorHome.p).add(new THREE.Vector3(0, 0, -0.14 * jolt)); W.door.rotation.x = -0.025 * jolt;
+    W.doorCrack.material.opacity = crack;
+    C.col.forEach((c, i) => { c.place(H([-1.8, 0.6, 2.8][i], 0, 0).x, 0.4, H(0, 0, [14.2, 15.0, 14.6][i]).z, PI); c.screenMode = 'face'; });
+    const dd = C.dad;
+    if (lt < arrive) { const k = easeIn(seg(lt, 0, arrive)); const z = lerp(6.5, 10.6, k), x = lerp(4.8, 0.3, k); dd.place(H(x, 0, 0).x, 0, H(0, 0, z).z, 0.4 * (1 - k)); dd.walk(T * 13, 0.95); dd.upper.rotation.x = 0.3; dd.expr = 'determined'; }
+    else { const tt = smooth(seg(lt, arrive, arrive + 0.12)); dd.place(H(0, 0, 0).x, 0, H(0, 0, 11.0 - 0.15 * jolt).z, lerp(0.4, PI, tt)); dd.armL.rotation.z = -1.35 * tt; dd.armR.rotation.z = 1.35 * tt; dd.expr = 'yell'; dd.headG.rotation.x = -0.08; dd.upper.rotation.x = 0.12 * jolt; }
+    bangs.forEach((b, i) => { burst(W.dust, H(0, 6.4, 11.7), lt - b, { speed: 3, life: 0.6, size: 0.6, seed: 30 + i, dir: [0, -2, -2] }); });
+    cam(H(0.9, 1.6, 3.6), H(0, 4.6, 11), 52, { shake: 0.06 * jolt + 0.02, T });
+    bangs.forEach((b, i) => sfx('BANG!', [300, 760, 420, 700][i], [380, 470, 560, 360][i], 150, (lt - b) / 0.55, '#fff', [-10, 8, -4, 10][i]));
   } });
   // 16 — I wasn't a ghost (dolly zoom)
   S.push({ line: 16, update(lt, d, T) {
@@ -323,20 +327,27 @@ export function makeShots(X) {
     });
     const e = smooth(lt / d); cam([0, lerp(3.2, 15, e), lerp(46, 50, e)], [0, lerp(3, 1, e), -30], 46);
   } });
-  // 19 — door off its hinges
+  // 19 — door off its hinges: Dad braced against the cracked door; it blasts off behind him and over his head
   S.push({ line: 19, update(lt, d, T) {
-    houseNight(); W.lampLight.intensity = 30; const b = 0.1;
-    const k = easeOut(seg(lt, b, 1.25));
-    W.door.position.copy(H(-1.55 + k * 1.2, lerp(0, 2.2, Math.sin(k * PI)) + k * 0.2, lerp(12, 3.6, k))); W.door.rotation.set(-k * 1.45, k * 0.5, k * 0.25);
+    houseNight(); W.lampLight.intensity = 30; const b = 0.22;
+    const pre = lt < b; const bulge = pre ? Math.abs(Math.sin(lt * 40)) * seg(lt, 0, b) : 0;
+    if (pre) { W.door.position.copy(doorHome.p).add(new THREE.Vector3(0, 0, -0.12 * bulge)); W.door.rotation.set(-0.03 * bulge, 0, 0); }
+    else { const k = smooth(seg(lt, b, 1.4)); const z = lerp(12, 3.6, k); const y = k < 0.45 ? lerp(0, 5.2, Math.sin(k / 0.45 * PI / 2)) : lerp(5.2, 0.2, easeIn((k - 0.45) / 0.55));
+      W.door.position.copy(H(-1.55 + k * 1.2, y, z)); W.door.rotation.set(-1.45 * Math.min(1, k * 2.5), k * 0.5, k * 0.25 + Math.sin(k * 9) * 0.1 * (1 - k)); }
+    W.doorCrack.material.opacity = 1;
     W.porchLight.intensity = lt > b ? 160 : 25; fx2.color.set('#cfe0ff'); fx2.intensity = lt > b ? 110 : 0; fx2.position.copy(H(0, 6, 15.5));
-    C.col.forEach((c, i) => { c.place(H([0, -2.4, 2.4][i], 0, 0).x, 0.4, H(0, 0, [13.6, 15.2, 15.2][i]).z, PI); c.screenMode = 'face'; });
-    const dd = C.dad; const kd = easeOut(seg(lt, b, 0.9)); dd.place(H(lerp(0.5, -5.5, kd), 0, lerp(10.6, 8.5, kd)).x, lerp(0, 0.5, kd), H(0, 0, lerp(10.6, 8.5, kd)).z, PI); dd.root.rotation.z = kd * 1.4; dd.expr = 'shock';
-    burst(W.dust, H(0, 1, 11.8), lt - b, { speed: 10, life: 1.4, size: 1.1, dir: [0, 0, -5], seed: 8 });
-    cam(H(1.4, 1.3, 1.2), H(0, 4.4, 11), 48, { shake: imp(lt, b, 0.7, 0.45), T }); UI.flash(imp(lt, b, 0.22, 0.85));
+    C.col.forEach((c, i) => { c.place(H([0, -2.4, 2.4][i], 0, 0).x, 0.4, H(0, 0, [13.6, 15.2, 15.2][i]).z, PI); c.screenMode = 'face'; c.root.visible = !pre; });
+    const dd = C.dad;
+    if (pre) { dd.place(H(0, 0, 0).x, 0, H(0, 0, 11.0 - 0.12 * bulge).z, PI); dd.armL.rotation.z = -1.35; dd.armR.rotation.z = 1.35; dd.expr = 'scared'; dd.upper.rotation.x = 0.1 * bulge; }
+    else { const kd = easeOut(seg(lt, b, b + 0.7)); const z = lerp(11, 6.2, kd); dd.place(H(lerp(0, -1.2, kd), 0, 0).x, lerp(0, -1.45, easeIn(kd)), H(0, 0, z).z, PI + 0.3 * kd); dd.hips.rotation.x = 1.45 * kd; dd.armL.rotation.x = dd.armR.rotation.x = -2.6 * kd; dd.expr = 'shock'; }
+    W.doorBits.forEach(({ m, v, s }, i) => { const tau = lt - b; if (tau <= 0) return; m.visible = true; const o = H(0, 3.3, 11.8); m.position.set(o.x + v[0] * tau, Math.max(0.1, o.y + v[1] * tau - 9 * tau * tau), o.z + v[2] * tau); m.rotation.set(s[0] * tau, s[1] * tau, s[2] * tau); });
+    burst(W.dust, H(0, 2.5, 11.6), lt - b, { speed: 10, life: 1.4, size: 1.1, dir: [0, 0, -5], seed: 8 });
+    cam(H(1.8, 2.4, 2.2), H(0, 4.6, 11), 56, { shake: imp(lt, b, 0.7, 0.45) + 0.04 * bulge, T }); UI.flash(imp(lt, b, 0.2, 0.8));
+    sfx('BOOM!', 560, 420, 200, (lt - b) / 0.9, '#ffe14d', -6);
   } });
   // 20 — Mom frying pan
   S.push({ line: 20, update(lt, d, T) {
-    houseNight(); W.door.visible = true; W.door.position.copy(H(-0.3, 0.2, 3.6)); W.door.rotation.set(-1.45, 0.5, 0.25);
+    houseNight(); W.door.visible = true; W.door.position.copy(H(-0.3, 0.2, 3.6)); W.door.rotation.set(-1.45, 0.5, 0.25); W.doorCrack.material.opacity = 1;
     const ti = word(20, 'hit') - (T - lt) + 0.05; const m = C.mom; const c = C.col[0];
     const k = lt < ti ? seg(lt, 0, ti) : 1; const pre = lt < ti;
     m.place(H(-1, 0, 5.7).x, pre ? 0 : Math.max(0, 0.55 - (lt - ti) * 1.5), H(0, 0, 5.7).z, 0); m.expr = 'angry';
@@ -351,7 +362,7 @@ export function makeShots(X) {
   } });
   // 21 — Dad tackles through the couch
   S.push({ line: 21, update(lt, d, T) {
-    houseNight(); W.door.position.copy(H(-0.3, 0.2, 3.6)); W.door.rotation.set(-1.45, 0.5, 0.25); W.door.visible = false;
+    houseNight(); W.door.position.copy(H(-0.3, 0.2, 3.6)); W.door.rotation.set(-1.45, 0.5, 0.25); W.door.visible = false; W.doorCrack.material.opacity = 1;
     const ti = word(21, 'tackled') - (T - lt) + 0.25; const ic = ti + 0.3; const dd = C.dad; const c = C.col[1];
     const run = seg(lt, 0, ti - 0.25); let dz = lerp(11.5, 8.3, run), dy = 0;
     dd.expr = 'angry';

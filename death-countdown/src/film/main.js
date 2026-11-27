@@ -125,7 +125,7 @@ function resetAll() {
   scene.add(W.pan); W.pan.visible = false; W.pan.rotation.set(0, 0, 0); W.pan.position.set(0, -50, 0);
   scene.add(W.cane); W.cane.rotation.set(0, 0, 0); scene.add(C.armB, C.handB); C.armB.material = L.mat('#ff8c1a'); C.handB.material = L.mat('#f5c99b'); C.armB.rotation.set(0, 0, 0);
   W.rain.visible = false; W.smoke.visible = false; W.fire.intensity = 0; W.fireGlow.material.opacity = 0; W.skyG.visible = false; W.crater.visible = false; W.door.visible = true; W.dust.visible = false; W.orbs.visible = false; W.sparks.visible = false;
-  W.door.position.copy(doorHome.p); W.door.rotation.copy(doorHome.r);
+  W.door.position.copy(doorHome.p); W.door.rotation.copy(doorHome.r); W.doorCrack.material.opacity = 0; W.doorBits.forEach((b) => (b.m.visible = false));
   W.couchL.position.set(0, 0, 0); W.couchL.rotation.set(0, 0, 0); W.couchR.position.set(0, 0, 0); W.couchR.rotation.set(0, 0, 0);
   W.houses.forEach((h) => { h.winMat.color.set('#2b3550'); h.plMat.color.set('#3a3a30'); h.glow.material.opacity = 0; });
   W.porchLight.intensity = 0; W.lampLight.intensity = 0; W.moon.intensity = 0; W.nightLamp.intensity = 0; W.copLights.forEach((l) => (l.intensity = 0));

@@ -264,6 +264,13 @@ export function buildWorld(scene) {
   H.add(box(30, 10, 0.2, '#7fc8ff', 0, 5, 12.35).translateX(0)); H.children[H.children.length - 1].position.set(0, 5, 12.3); H.children[H.children.length - 1].visible = false;
   W.door = new THREE.Group(); const dp = box(3.1, 6.5, 0.3, '#7a4a2a', 1.55, 3.25, 0); W.door.add(dp); W.door.add(box(0.25, 0.25, 0.5, '#ffd43b', 2.6, 3.2, 0.1)); W.door.add(box(2.2, 2, 0.35, '#8f5a35', 1.55, 4.6, 0)); W.door.add(box(2.2, 2, 0.35, '#8f5a35', 1.55, 1.9, 0));
   W.door.position.set(-1.55, 0, 12); H.add(W.door);
+  // crack overlay on the inside face of the door + wood fragments for the blast
+  { const ct = textTex(200, 420, (c, w, h) => { c.clearRect(0, 0, w, h); const r = rng(55); c.strokeStyle = 'rgba(20,10,5,0.95)'; c.lineCap = 'round';
+      for (let k = 0; k < 14; k++) { let x = w * (0.3 + r() * 0.4), y = h * (0.25 + r() * 0.5); c.lineWidth = 3 + r() * 4; c.beginPath(); c.moveTo(x, y); const a = r() * Math.PI * 2; for (let j = 0; j < 6; j++) { x += Math.cos(a + (r() - 0.5) * 1.3) * (18 + r() * 26); y += Math.sin(a + (r() - 0.5) * 1.3) * (18 + r() * 26); c.lineTo(x, y); } c.stroke(); }
+      c.fillStyle = 'rgba(25,12,5,0.9)'; for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(w * (0.35 + r() * 0.3), h * (0.3 + r() * 0.4), 8 + r() * 10, 5 + r() * 8, r() * 3, 0, 7); c.fill(); } });
+    W.doorCrack = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 6.3), new THREE.MeshBasicMaterial({ map: ct, transparent: true, opacity: 0, depthWrite: false }));
+    W.doorCrack.position.set(1.55, 3.25, -0.19); W.doorCrack.rotation.y = Math.PI; W.door.add(W.doorCrack);
+    W.doorBits = []; const rb = rng(66); for (let k = 0; k < 16; k++) { const m = box(0.25 + rb() * 0.5, 0.12 + rb() * 0.25, 0.4 + rb() * 1.0, ['#7a4a2a', '#8f5a35', '#5c3d2e'][k % 3]); m.visible = false; scene.add(m); W.doorBits.push({ m, v: [(rb() - 0.5) * 9, 2 + rb() * 6, -(4 + rb() * 9)], s: [rb() * 12, rb() * 12, rb() * 12] }); } }
   // porch
   const porch = box(12, 0.4, 7, '#a0785a', 0, 0.2, 15.7); H.add(porch); H.add(box(2, 0.25, 1, '#bf9a7a', 0, 0.12, 19.6));
   const pfront = new THREE.Mesh(new THREE.PlaneGeometry(40, 18), mat('#7fc8ff')); pfront.position.set(0, 8, 12.22); H.add(pfront);
