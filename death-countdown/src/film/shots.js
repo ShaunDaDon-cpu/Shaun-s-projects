@@ -128,12 +128,15 @@ export function makeShots(X) {
   // 2 — 80 years flex
   S.push({ line: 2, update(lt, d, T) {
     light('day', [7, 0, -2]); crowd(T + 3, [6, 7, 8, 9, 10, 11], { span: 50, zc: -70 });
-    const g = C.shades; g.place(7.6, 0.3 + Math.abs(Math.sin(T * 5)) * 0.35, -2, -PI / 2); g.expr = 'smug';
-    g.armL.rotation.z = -2.45 + Math.sin(T * 9) * 0.15; g.armR.rotation.z = 2.45 - Math.sin(T * 9) * 0.15; g.headG.rotation.z = Math.sin(T * 4.5) * 0.12;
-    [[1, 5.6, 0.3, -6.2, 'shock'], [2, 5.4, 0.3, 2.4, 'grin'], [3, 4.3, 0.02, -5.0, 'shock']].forEach(([k, x, y, z, ex]) => { const e = C.ext[k]; e.place(x, y, z, PI / 2 + (z + 2) * 0.12); e.expr = ex; e.armL.rotation.x = -0.4; e.armR.rotation.x = -0.4; });
-    const a = lerp(-0.3, 0.2, smooth(lt / d)); const cp = [7.6 - Math.cos(a) * 11, 1.6, -2 + Math.sin(a) * 11];
-    cam(cp, [7.6, 5.0, -2], 52);
-    const ph = hold(g, C.phones[2], camera.position, 'R', 0.3, 2.2); ph.draw({ main: '80y 0d', sub: L.fmtTime(80 * YEAR - T).sub, color: '#ffd43b', top: 'TIME LEFT' });
+    const g = C.shades; g.place(7.6, 0.3 + Math.abs(Math.sin(T * 5)) * 0.25, -2, -PI / 2 - 0.25); g.expr = 'smug';
+    g.armL.rotation.z = -2.5 + Math.sin(T * 9) * 0.15; g.headG.rotation.z = Math.sin(T * 4.5) * 0.08; g.headG.rotation.y = -0.15;
+    g.armR.rotation.x = -2.05 + Math.sin(T * 9) * 0.06; g.armR.rotation.z = 0.15;
+    [[1, 10.4, 0, -6.2, 'shock'], [2, 10.6, 0, 2.4, 'grin'], [3, 11.6, 0, -2.4, 'shock']].forEach(([k, x, y, z, ex]) => { const e = C.ext[k]; e.place(x, y, z, -PI / 2 + (z + 2) * -0.12); e.expr = ex; e.armL.rotation.x = -0.4; e.armR.rotation.x = -0.4; });
+    const a = lerp(-0.22, 0.12, smooth(lt / d)); const cp = [7.6 - Math.cos(a) * 10.5, 2.4, -2 + Math.sin(a) * 10.5];
+    cam(cp, [7.6, 5.2, -2.6], 46);
+    let ph = hold(g, C.phones[2], camera.position, 'R', 0.6, 2.0);
+    const mid = g.headWorld().lerp(ph.g.position, 0.55); mid.y -= 0.4; cam(cp, mid, 46);
+    ph = hold(g, C.phones[2], camera.position, 'R', 0.6, 2.0); ph.draw({ main: '80y 0d', sub: L.fmtTime(80 * YEAR - T).sub, color: '#ffd43b', top: 'TIME LEFT' });
     stream(W.sparks, g.headWorld().add(new THREE.Vector3(0, -1, 0)), g.headWorld().add(new THREE.Vector3(0, 3, 0)), T, { arc: 0, jit: 4, size: 0.35, speed: 0.6 }); W.sparks.material.color.set('#ffe066');
   } });
   // 3 — 12 seconds left

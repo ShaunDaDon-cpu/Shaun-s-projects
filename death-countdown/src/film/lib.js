@@ -149,7 +149,10 @@ export class Rig {
     this.face.position.set(0, (o.headH || hs) / 2 + 0.05, hs / 2 + 0.012); this.headG.add(this.face);
     this.addHair(o.hair, o.hairColor, hs);
     if (o.glasses) { const g = new THREE.Group(); const lens = new THREE.MeshBasicMaterial({ color: '#dff1ff', transparent: true, opacity: 0.35 }); [-0.3, 0.3].forEach((x) => { g.add(box(0.44, 0.06, 0.05, '#222', x, 0.16, 0), box(0.44, 0.06, 0.05, '#222', x, -0.16, 0), box(0.06, 0.36, 0.05, '#222', x - 0.2, 0, 0), box(0.06, 0.36, 0.05, '#222', x + 0.2, 0, 0)); const l = new THREE.Mesh(boxG(0.36, 0.28, 0.02), lens); l.position.x = x; g.add(l); }); g.add(box(0.2, 0.05, 0.05, '#222', 0, 0.08, 0)); g.position.set(0, hs * 0.62, hs / 2 + 0.05); this.headG.add(g); }
-    if (o.shades) { const g = box(1.15, 0.3, 0.08, '#0d0d0d', 0, hs * 0.62, hs / 2 + 0.05, 0.04); this.headG.add(g); }
+    if (o.shades) { // sunglasses pushed up on the forehead so the face stays readable
+      const g = new THREE.Group(); const lens = mat('#141414'); const shine = new THREE.MeshBasicMaterial({ color: '#7fd8ff' });
+      [-0.3, 0.3].forEach((x) => { const l = box(0.5, 0.3, 0.06, null, x, 0, 0, 0.08, lens); g.add(l); const sh = new THREE.Mesh(boxG(0.12, 0.06, 0.01), shine); sh.position.set(x + 0.12, 0.07, 0.035); g.add(sh); });
+      g.add(box(0.14, 0.06, 0.06, '#141414', 0, 0.06, 0)); g.position.set(0, hs + 0.02, hs / 2 + 0.06); g.rotation.x = -0.35; this.headG.add(g); }
     this.root.scale.setScalar(this.o.scale);
     this.faceKey = ''; this.expr = 'neutral'; this.talk = 0; this.blinkSeed = Math.random() * 10;
     this.reset();
