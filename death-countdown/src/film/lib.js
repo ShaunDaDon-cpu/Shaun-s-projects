@@ -153,6 +153,14 @@ export class Rig {
       const g = new THREE.Group(); const lens = mat('#141414'); const shine = new THREE.MeshBasicMaterial({ color: '#7fd8ff' });
       [-0.3, 0.3].forEach((x) => { const l = box(0.5, 0.3, 0.06, null, x, 0, 0, 0.08, lens); g.add(l); const sh = new THREE.Mesh(boxG(0.12, 0.06, 0.01), shine); sh.position.set(x + 0.12, 0.07, 0.035); g.add(sh); });
       g.add(box(0.14, 0.06, 0.06, '#141414', 0, 0.06, 0)); g.position.set(0, hs + 0.02, hs / 2 + 0.06); g.rotation.x = -0.35; this.headG.add(g); }
+    if (o.collector) {
+      [this.armL, this.armR].forEach((arm) => { arm.children.forEach((m) => { if (m.isMesh) { m.scale.set(0.72, 1.45, 0.72); m.position.y *= 1.45; } }); arm.hand.position.y = -1.75 * 1.45;
+        for (let f = -1; f <= 1; f++) { const fg = box(0.11, 1.15, 0.11, '#07070a', f * 0.2, -0.5, 0.05 * f, 0.03); fg.rotation.z = f * 0.18; fg.rotation.x = 0.25; arm.hand.add(fg); } });
+      [this.legL, this.legR].forEach((leg) => leg.children.forEach((m) => m.scale.set(0.7, 1.12, 0.75)));
+      this.legL.position.x = -0.36; this.legR.position.x = 0.36; this.hips.position.y = 2.24; this.torso.scale.set(0.84, 1.08, 0.8);
+      this.armL.position.x = -1.28; this.armR.position.x = 1.28;
+      this.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: null, color: '#ff2240', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    }
     this.root.scale.setScalar(this.o.scale);
     this.faceKey = ''; this.expr = 'neutral'; this.talk = 0; this.blinkSeed = Math.random() * 10;
     this.reset();
@@ -171,7 +179,7 @@ export class Rig {
   }
   reset() {
     this.root.visible = false; this.root.rotation.set(0, 0, 0); this.root.position.set(0, 0, 0);
-    this.hips.position.set(0, 2, 0); this.hips.rotation.set(0, 0, 0); this.upper.rotation.set(0, 0, 0);
+    this.hips.position.set(0, this.o.collector ? 2.24 : 2, 0); this.hips.rotation.set(0, 0, 0); this.upper.rotation.set(0, 0, 0);
     [this.armL, this.armR, this.legL, this.legR, this.headG].forEach((g) => g.rotation.set(0, 0, 0)); this.headG.position.set(0, 2, 0);
     this.expr = 'neutral'; this.talk = 0; this.noBlink = false; this.headG.visible = this.armR.visible = this.armL.visible = true;
   }
@@ -238,29 +246,49 @@ export class Phone {
   countdown(sec, extra = {}) { const f = fmtTime(sec); this.draw({ main: f.main, sub: f.sub, ...extra }); }
 }
 
+const _off = typeof document !== 'undefined' ? document.createElement('canvas') : null; if (_off) { _off.width = 256; _off.height = 320; }
+function creepGrin(c, cx, cy, w, h, alpha, col = '#ffffff') {
+  c.save(); c.globalAlpha = alpha; c.fillStyle = '#000'; c.beginPath(); c.moveTo(cx - w, cy - h * 0.2); c.quadraticCurveTo(cx, cy + h * 1.4, cx + w, cy - h * 0.2); c.quadraticCurveTo(cx, cy + h * 0.5, cx - w, cy - h * 0.2); c.fill();
+  c.fillStyle = col; const n = 11; for (let k = 0; k < n; k++) { const x0 = cx - w * 0.9 + (k / n) * w * 1.8, x1 = x0 + w * 1.8 / n; const yy = cy - h * 0.1 + Math.sin((k + 0.5) / n * Math.PI) * h * 0.55; c.beginPath(); c.moveTo(x0, yy - h * 0.22); c.lineTo(x1, yy - h * 0.22); c.lineTo((x0 + x1) / 2, yy + h * 0.28); c.fill(); }
+  c.restore();
+}
 export function drawCollector(ctx, mode, t, heroFace) {
   const W = 256, H = 320; const c = ctx;
   c.fillStyle = '#05060a'; c.fillRect(0, 0, W, H);
+  const r = rng(Math.floor(t * 30) + 7);
   if (mode === 'static') {
-    const r = rng(Math.floor(t * 30) + 7);
     for (let i = 0; i < 900; i++) { const v = Math.floor(r() * 200); c.fillStyle = `rgb(${v},${v},${v})`; c.fillRect(r() * W, r() * H, 6, 3); }
-    c.fillStyle = 'rgba(0,0,0,0.25)'; for (let y = 0; y < H; y += 6) c.fillRect(0, y, W, 2);
+    // a face surfacing through the static: hollow eyes and a jagged grin
+    const a = 0.55 + 0.35 * Math.sin(t * 7.3) * Math.sin(t * 2.1);
+    c.save(); c.globalAlpha = a; c.fillStyle = '#000'; [[82, 110], [174, 110]].forEach(([x, y]) => { c.beginPath(); c.ellipse(x, y, 30, 40, 0, 0, 7); c.fill(); });
+    c.fillStyle = '#ff1a2e'; c.shadowColor = '#ff1a2e'; c.shadowBlur = 16; [[82, 116], [174, 116]].forEach(([x, y]) => { c.beginPath(); c.arc(x + Math.sin(t * 3) * 4, y, 6, 0, 7); c.fill(); }); c.restore();
+    creepGrin(c, 128, 200, 96, 50, a);
+    c.fillStyle = 'rgba(0,0,0,0.3)'; for (let y = 0; y < H; y += 6) c.fillRect(0, y, W, 2);
     return;
   }
   if (mode === 'face' || mode === 'crack') {
-    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#3a0710'); g.addColorStop(1, '#12020a'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    c.save(); c.translate(48, 26); c.fillStyle = '#f5c99b'; c.beginPath(); c.roundRect(0, 0, 160, 160, 26); c.fill();
-    c.fillStyle = '#4a2f1d'; c.beginPath(); c.roundRect(-4, -4, 168, 40, 18); c.fill();
-    c.scale(160 / 256, 160 / 256); heroFace && c.drawImage(heroFace, 0, 0); c.restore();
-    c.fillStyle = '#ff2240'; c.fillRect(0, 214, W, 64);
-    c.fillStyle = '#fff'; c.font = '700 46px Fredoka'; c.textAlign = 'center'; c.fillText('OVERDUE', W / 2, 262);
-    c.fillStyle = 'rgba(0,0,0,0.2)'; for (let y = 0; y < H; y += 5) c.fillRect(0, y, W, 2);
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#4a0010'); g.addColorStop(1, '#0d0005'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    const o = _off.getContext('2d'); o.clearRect(0, 0, W, H);
+    o.save(); o.translate(48, 26); o.fillStyle = '#e8b48c'; o.beginPath(); o.roundRect(0, 0, 160, 160, 26); o.fill(); o.fillStyle = '#3a2416'; o.beginPath(); o.roundRect(-4, -4, 168, 40, 18); o.fill();
+    o.scale(160 / 256, 160 / 256); heroFace && o.drawImage(heroFace, 0, 0); o.restore();
+    // hollow black eyes with red pupils over the hero's face
+    o.fillStyle = '#000'; [[102, 96], [154, 96]].forEach(([x, y]) => { o.beginPath(); o.ellipse(x, y, 17, 22, 0, 0, 7); o.fill(); });
+    o.fillStyle = '#ff2a3a'; o.shadowColor = '#ff2a3a'; o.shadowBlur = 12; [[102, 99], [154, 99]].forEach(([x, y]) => { o.beginPath(); o.arc(x, y, 4.5, 0, 7); o.fill(); }); o.shadowBlur = 0;
+    // red tint
+    o.globalCompositeOperation = 'multiply'; o.fillStyle = '#ff6a6a'; o.fillRect(0, 0, W, 214); o.globalCompositeOperation = 'source-over';
+    // glitch: copy horizontal slices with random offsets
+    for (let y = 0; y < 214; y += 10) { const off = r() < 0.22 ? (r() - 0.5) * 46 : 0; c.drawImage(_off, 0, y, W, 10, off, y, W, 10); }
+    if (r() < 0.35) { const y = r() * 200; c.globalCompositeOperation = 'lighter'; c.drawImage(_off, 0, y, W, 24, 6, y, W, 24); c.globalCompositeOperation = 'source-over'; }
+    const fl = Math.sin(t * 31) > -0.6;
+    c.fillStyle = fl ? '#ff2240' : '#7a0010'; c.fillRect(0, 214, W, 64);
+    c.fillStyle = '#fff'; c.font = '700 46px Fredoka'; c.textAlign = 'center'; c.fillText('OVERDUE', W / 2 + (r() < 0.2 ? (r() - 0.5) * 14 : 0), 262);
+    c.fillStyle = 'rgba(0,0,0,0.28)'; for (let y = 0; y < H; y += 5) c.fillRect(0, y, W, 2);
     if (mode === 'crack') {
       c.strokeStyle = 'rgba(255,255,255,0.95)'; c.lineWidth = 3;
-      const cx = 150, cy = 120; const r = rng(42);
-      for (let k = 0; k < 11; k++) { const a = k / 11 * Math.PI * 2 + r() * 0.4; let x = cx, y = cy; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 4; j++) { x += Math.cos(a + (r() - 0.5) * 0.8) * (25 + r() * 30); y += Math.sin(a + (r() - 0.5) * 0.8) * (25 + r() * 30); c.lineTo(x, y); } c.stroke(); }
+      const cx = 150, cy = 120; const r2 = rng(42);
+      for (let k = 0; k < 11; k++) { const a = k / 11 * Math.PI * 2 + r2() * 0.4; let x = cx, y = cy; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 4; j++) { x += Math.cos(a + (r2() - 0.5) * 0.8) * (25 + r2() * 30); y += Math.sin(a + (r2() - 0.5) * 0.8) * (25 + r2() * 30); c.lineTo(x, y); } c.stroke(); }
       c.beginPath(); c.arc(cx, cy, 18, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.arc(cx, cy, 40, 0, Math.PI * 2); c.stroke();
-      const r2 = rng(Math.floor(t * 24)); c.fillStyle = 'rgba(0,255,200,0.4)'; c.fillRect(0, r2() * H, W, 8); c.fillStyle = 'rgba(255,0,120,0.4)'; c.fillRect(0, r2() * H, W, 5);
+      c.fillStyle = 'rgba(0,255,200,0.4)'; c.fillRect(0, r() * H, W, 8); c.fillStyle = 'rgba(255,0,120,0.4)'; c.fillRect(0, r() * H, W, 5);
     }
     return;
   }

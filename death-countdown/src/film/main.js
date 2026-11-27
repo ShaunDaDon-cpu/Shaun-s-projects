@@ -60,7 +60,7 @@ C.dad = new L.Rig({ shirt: '#1c7ed6', pants: '#3a3a48', hair: 'short', hairColor
 C.sis = new L.Rig({ shirt: '#20c997', pants: '#5f3dc4', hair: 'pony', hairColor: '#5a3418', scale: 0.88 });
 C.gma = new L.Rig({ shirt: '#9c36b5', pants: '#5c4b51', hair: 'bun', hairColor: '#d9d9e3', glasses: true, sleeves: true, scale: 0.95 });
 C.col = [0, 1, 2].map(() => new L.Rig({ collector: true, shirt: '#14151b', pants: '#14151b', tie: '#0a0a0a', collar: '#f1f3f5', headH: 1.7, headSize: 1.4, sleeves: true, skin: '#14151b', hair: 'none', scale: 1.28 }));
-C.col.forEach((c) => { c.screenMode = 'static'; c.screenKey = ''; });
+C.col.forEach((c) => { c.screenMode = 'static'; c.screenKey = ''; c.glow.material.map = glowTex(); c.glow.scale.set(4.2, 4.2, 1); c.glow.position.copy(c.face.position).add(new THREE.Vector3(0, 0, 0.35)); c.headG.add(c.glow); });
 C.lunch = new L.Rig({ shirt: '#ffffff', pants: '#495057', hair: 'hairnet', apron: '#74c0fc', skin: '#c58c5c', scale: 1.05 });
 C.teacher = new L.Rig({ shirt: '#868e96', pants: '#343a40', hair: 'bald', hairColor: '#adb5bd', glasses: true, tie: '#c92a2a', collar: '#fff', sleeves: true });
 C.shades = new L.Rig({ shirt: '#f8f9fa', pants: '#f8f9fa', hair: 'spiky', hairColor: '#ffd43b', shades: true, chain: true, skin: '#e0a57a', sleeves: false, scale: 1.1 });
@@ -145,7 +145,12 @@ window.renderAt = (T) => {
   C.sis.talk = Math.max(C.sis.talk, talkLevel(T, 'SIS')); C.gma.talk = Math.max(C.gma.talk, talkLevel(T, 'GMA'));
   if (W.clouds.visible) W.animTown(T);
   allRigs.forEach((r) => r.root.visible && r.updateFace(T));
-  C.col.forEach((c) => { if (!c.root.visible) return; const key = c.screenMode + (c.screenMode === 'static' || c.screenMode === 'crack' ? Math.floor(T * 30) : ''); if (key !== c.screenKey) { c.screenKey = key; L.drawCollector(c.ctx, c.screenMode, T, heroFaceCanvas); c.tex.needsUpdate = true; } });
+  C.col.forEach((c, i) => { if (!c.root.visible) return;
+    c.upper.rotation.x += 0.13; const tw = Math.floor(T * 1.7 + i * 0.37); const tr = L.rng(tw * 13 + i * 101)(); const ph = T * 1.7 + i * 0.37 - tw;
+    if (tr < 0.55 && ph < 0.18) { const r2 = L.rng(tw * 7 + i)(); c.headG.rotation.z += (r2 - 0.5) * 0.7 * Math.sin(ph / 0.18 * Math.PI); c.headG.rotation.x += 0.12 * Math.sin(ph / 0.18 * Math.PI); }
+    c.glow.material.color.set(c.screenMode === 'settled' ? '#4dff9a' : c.screenMode === 'static' ? '#c8d0ff' : '#ff2240'); c.glow.material.opacity = c.screenMode === 'static' ? 0.22 : 0.42 + 0.12 * Math.sin(T * 9 + i);
+  });
+  C.col.forEach((c) => { if (!c.root.visible) return; const key = c.screenMode + (c.screenMode !== 'settled' ? Math.floor(T * 30) : ''); if (key !== c.screenKey) { c.screenKey = key; L.drawCollector(c.ctx, c.screenMode, T, heroFaceCanvas); c.tex.needsUpdate = true; } });
   camera.aspect = W_ / H_; camera.updateProjectionMatrix();
   caption(T);
   ov.innerHTML = ovHTML.join('');
