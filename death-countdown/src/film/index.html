@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Death Countdown</title>
+<style>
+@font-face { font-family: 'Luckiest Guy'; src: url('../../node_modules/@fontsource/luckiest-guy/files/luckiest-guy-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Fredoka'; font-weight: 600; src: url('../../node_modules/@fontsource/fredoka/files/fredoka-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Fredoka'; font-weight: 700; src: url('../../node_modules/@fontsource/fredoka/files/fredoka-latin-700-normal.woff2') format('woff2'); }
+html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+#c { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.75) 100%); opacity: .35; }
+#ov { position: absolute; inset: 0; pointer-events: none; }
+#ov .o { position: absolute; }
+#flash { position: absolute; inset: 0; opacity: 0; background: #fff; pointer-events: none; }
+#cap { position: absolute; left: 50%; top: 64%; transform: translate(-50%,-50%); font-family: 'Luckiest Guy'; font-size: 128px; line-height: 1; white-space: nowrap; color: #ffe14d;
+  -webkit-text-stroke: 16px #000; paint-order: stroke fill; text-shadow: 0 10px 0 rgba(0,0,0,0.85), 0 14px 24px rgba(0,0,0,0.5); letter-spacing: 2px; }
+#tag { position: absolute; left: 50%; top: 58.2%; transform: translate(-50%,-50%); font-family: 'Fredoka'; font-weight: 700; font-size: 44px; color: #111; padding: 6px 26px 4px; border-radius: 40px; border: 5px solid #000; opacity: 0; letter-spacing: 3px; }
+.sfx { font-family: 'Luckiest Guy'; color: #fff; -webkit-text-stroke: 14px #000; paint-order: stroke fill; text-shadow: 0 8px 0 #000; white-space: nowrap; }
+.mono { font-family: 'Fredoka'; font-weight: 600; color: #fff; text-shadow: 0 2px 6px #000; }
+.wm { font-family: 'Fredoka'; font-weight: 600; font-size: 30px; color: rgba(255,255,255,0.55); right: 40px; bottom: 300px; }
+</style>
+<script type="importmap">{ "imports": { "three": "../../node_modules/three/build/three.module.js", "three/addons/": "../../node_modules/three/examples/jsm/" } }</script>
+</head><body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="vig"></div>
+  <div id="flash"></div>
+  <div id="ov"></div>
+  <div id="tag"></div>
+  <div id="cap"></div>
+</div>
+<script type="module" src="./main.js"></script>
+</body></html>
