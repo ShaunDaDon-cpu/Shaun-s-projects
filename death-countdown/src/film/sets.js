@@ -324,6 +324,58 @@ export function buildWorld(scene) {
   room(B, 22, 18, 9, '#3b3f8f', '#5b4aa0', '#4c3f7a', true);
   const bed = new THREE.Group(); bed.add(box(5, 1.4, 9, '#8a5a35', 0, 0.7, 0), box(4.8, 0.6, 8.8, '#f1f3f5', 0, 1.7, 0), box(4.9, 0.4, 5.6, '#4dabf7', 0, 2.1, 1.5), box(3, 0.6, 1.6, '#fff', 0, 2.2, -3.4, 0.25), box(5.2, 3.4, 0.5, '#8a5a35', 0, 1.7, -4.6));
   bed.position.set(0, 0, -2); B.add(bed); W.bed = bed;
+  // ---- gamer boy's room dressing ----
+  { const P = (w, h, x, y, z, ry, draw, glow = 0.55) => { const t = textTex(Math.round(w * 64), Math.round(h * 64), draw); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: t, emissive: new THREE.Color(glow, glow, glow), emissiveMap: t })); m.position.set(x, y, z); m.rotation.y = ry; B.add(m); return m; };
+    const T = (c, w, t, y, col, size, stroke) => { c.font = `700 ${size}px Fredoka`; c.textAlign = 'center'; if (stroke) { c.lineWidth = size / 5; c.strokeStyle = stroke; c.strokeText(t, w / 2, y); } c.fillStyle = col; c.fillText(t, w / 2, y); };
+    // posters: original game titles
+    P(3.6, 5, -6.6, 5.4, -8.75, 0, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#4dabf7'); g.addColorStop(1, '#d0ebff'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+      c.fillStyle = '#2f9e44'; c.beginPath(); c.moveTo(0, h * 0.75); c.lineTo(w * 0.3, h * 0.45); c.lineTo(w * 0.55, h * 0.7); c.lineTo(w * 0.8, h * 0.4); c.lineTo(w, h * 0.65); c.lineTo(w, h); c.lineTo(0, h); c.fill();
+      c.fillStyle = '#ffd43b'; c.fillRect(w / 2 - 22, h * 0.42, 44, 44); c.fillStyle = '#f5c99b'; c.fillRect(w / 2 - 18, h * 0.35, 36, 30); c.fillStyle = '#212529'; c.fillRect(w / 2 - 10, h * 0.38, 6, 6); c.fillRect(w / 2 + 4, h * 0.38, 6, 6); c.fillStyle = '#ced4da'; c.fillRect(w / 2 + 24, h * 0.3, 8, 60);
+      T(c, w, 'BLOCK', 58, '#fff', 54, '#1864ab'); T(c, w, 'QUEST', 112, '#ffd43b', 54, '#1864ab'); });
+    P(2.8, 3.9, 2.6, 5.9, -8.75, 0, (c, w, h) => { c.fillStyle = '#0b0f2e'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; for (let i = 0; i < 60; i++) c.fillRect((i * 67) % w, (i * 41) % h, 2, 2);
+      c.fillStyle = '#ff6b6b'; c.beginPath(); c.moveTo(w * 0.2, h * 0.7); c.lineTo(w * 0.75, h * 0.55); c.lineTo(w * 0.8, h * 0.65); c.lineTo(w * 0.25, h * 0.8); c.fill(); c.fillStyle = '#ffd43b'; c.beginPath(); c.moveTo(w * 0.2, h * 0.7); c.lineTo(w * 0.05, h * 0.78); c.lineTo(w * 0.25, h * 0.8); c.fill();
+      T(c, w, 'SPACE', 60, '#74c0fc', 50, '#000'); T(c, w, 'RACER 3', 112, '#ff6b6b', 46, '#000'); });
+    P(4.2, 3.4, 10.75, 5.6, -3.5, -Math.PI / 2, (c, w, h) => { c.fillStyle = '#5f3dc4'; c.fillRect(0, 0, w, h); const px = 16; const helm = ['..XXXX..', '.XXXXXX.', 'XXXXXXXX', 'XX.XX.XX', 'XXXXXXXX', '.XX..XX.']; helm.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'X') { c.fillStyle = '#ced4da'; c.fillRect(w / 2 - 64 + x * px, 70 + y * px, px, px); } }));
+      T(c, w, 'PIXEL KNIGHTS', 200, '#ffd43b', 34, '#000'); });
+    P(3.6, 3.0, 10.75, 5.8, 7.2, -Math.PI / 2, (c, w, h) => { c.fillStyle = '#212529'; c.fillRect(0, 0, w, h); c.fillStyle = '#adb5bd'; c.fillRect(w / 2 - 60, 40, 120, 100); c.fillStyle = '#ff2a3a'; c.fillRect(w / 2 - 40, 70, 24, 18); c.fillRect(w / 2 + 16, 70, 24, 18); c.fillStyle = '#495057'; c.fillRect(w / 2 - 35, 110, 70, 12);
+      T(c, w, 'ROBO RUMBLE', 190, '#69db7c', 36, '#000'); });
+    P(1.6, 3.2, -10.75, 6.4, 5.5, Math.PI / 2, (c, w, h) => { c.fillStyle = '#e8590c'; c.beginPath(); c.moveTo(0, 0); c.lineTo(w, h / 2); c.lineTo(0, h); c.fill(); c.save(); c.translate(30, h / 2); c.rotate(Math.PI / 2); c.fillStyle = '#fff'; c.font = '700 30px Fredoka'; c.textAlign = 'center'; c.fillText('TIGERS', 0, 10); c.restore(); });
+    // gaming desk + monitor + chair (right wall)
+    B.add(box(6, 0.3, 2.6, '#212529', 7.2, 3.1, -7.6), box(0.3, 2.6, 2.2, '#343a40', 4.5, 1.5, -7.8), box(0.3, 2.6, 2.2, '#343a40', 9.9, 1.5, -7.8));
+    const scrT = textTex(320, 180, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#5c7cfa'); g.addColorStop(1, '#a5d8ff'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.fillStyle = '#2f9e44'; c.fillRect(0, 140, w, 40); c.fillStyle = '#8a5a35'; c.fillRect(0, 150, w, 30);
+      [[60, 110], [150, 90], [230, 115]].forEach(([x, y]) => { c.fillStyle = '#c08457'; c.fillRect(x, y, 48, 14); }); c.fillStyle = '#ffd43b'; [[80, 92], [170, 72], [250, 97]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 6, 0, 7); c.fill(); });
+      c.fillStyle = '#ff6b6b'; c.fillRect(150, 112, 18, 28); c.fillStyle = '#f5c99b'; c.fillRect(151, 98, 16, 14); c.fillStyle = '#fff'; c.font = '700 18px Fredoka'; c.fillText('LVL 7   ★ 230', 10, 22); });
+    const mon = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.9), new THREE.MeshBasicMaterial({ map: scrT })); mon.position.set(7.2, 4.75, -8.2); B.add(mon);
+    B.add(box(3.6, 2.1, 0.2, '#111', 7.2, 4.75, -8.32), box(0.2, 0.9, 0.2, '#111', 7.2, 3.6, -8.4), box(2.2, 0.1, 0.8, '#343a40', 7.2, 3.3, -7.0), box(0.4, 0.12, 0.6, '#343a40', 8.9, 3.3, -7.0));
+    for (let k = 0; k < 7; k++) B.add(box(0.25, 0.05, 0.06, ['#ff6b6b', '#ffd43b', '#69db7c', '#4dabf7', '#b197fc'][k % 5], 6.3 + k * 0.3, 3.38, -6.7));
+    const mg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#74c0fc', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending })); mg.scale.set(7, 5, 1); mg.position.set(7.2, 4.7, -7.9); B.add(mg);
+    const hs = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.1, 8, 16, Math.PI), mat('#212529')); hs.position.set(5.3, 3.7, -7.6); B.add(hs);
+    const chair = new THREE.Group(); chair.add(box(2.2, 0.5, 2.2, '#e03131', 0, 2.0, 0, 0.2), box(2.2, 3.4, 0.5, '#e03131', 0, 3.6, 1.0, 0.25), box(1.2, 1.6, 0.52, '#212529', 0, 3.9, 1.02, 0.15), box(0.3, 1.5, 0.3, '#495057', 0, 1.0, 0), box(1.8, 0.2, 0.3, '#495057', 0, 0.2, 0), box(0.3, 0.2, 1.8, '#495057', 0, 0.2, 0));
+    chair.position.set(7.0, 0, -5.2); chair.rotation.y = 0.35; B.add(chair);
+    // TV dresser + console (back wall, left)
+    B.add(box(2, 2.6, 4.6, '#a9744f', 9.8, 1.3, 2.2)); for (let k = 0; k < 2; k++) B.add(box(0.1, 0.1, 4.2, '#5c3d2e', 8.78, 0.9 + k * 1.0, 2.2));
+    const tvT = textTex(256, 150, (c, w, h) => { c.fillStyle = '#0b0f2e'; c.fillRect(0, 0, w, h); c.fillStyle = '#ff6b6b'; c.font = '700 26px Fredoka'; c.textAlign = 'center'; c.fillText('ROBO RUMBLE', w / 2, 60); c.fillStyle = '#fff'; c.font = '600 18px Fredoka'; c.fillText('PRESS START', w / 2, 100); });
+    const tv = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 2.3), new THREE.MeshBasicMaterial({ map: tvT })); tv.position.set(10.45, 4.2, 2.2); tv.rotation.y = -Math.PI / 2; B.add(tv); B.add(box(0.2, 2.6, 4.3, '#111', 10.6, 4.2, 2.2));
+    B.add(box(1.0, 0.35, 1.4, '#f8f9fa', 9.9, 2.78, 0.6, 0.08), box(0.45, 0.25, 0.7, '#343a40', 9.3, 2.72, 3.2, 0.1), box(0.45, 0.25, 0.7, '#1c7ed6', 9.5, 2.72, 4.0, 0.1));
+    // shelf with trophies + toy robot (back wall right, above nightstand)
+    B.add(box(4, 0.25, 1, '#a9744f', 7.4, 7.0, -8.4)); [[6.0, '#ffd43b'], [6.8, '#ced4da'], [7.5, '#e8a95c']].forEach(([x, col]) => { const cup = cyl(0.25, 0.12, 0.5, col, 10); cup.position.set(x, 7.6, -8.4); B.add(cup); B.add(box(0.4, 0.2, 0.4, '#343a40', x, 7.22, -8.4)); });
+    const rb = new THREE.Group(); rb.add(box(0.6, 0.7, 0.5, '#adb5bd', 0, 0.35, 0), box(0.5, 0.45, 0.45, '#ced4da', 0, 0.95, 0), box(0.1, 0.1, 0.05, '#ff2a3a', -0.12, 1.0, 0.24), box(0.1, 0.1, 0.05, '#ff2a3a', 0.12, 1.0, 0.24)); rb.position.set(8.7, 7.13, -8.4); B.add(rb);
+    // LED strips along the ceiling line
+    [['#b197fc', [0, 8.7, -8.75], [22, 0.18, 0.1]], ['#22d3ee', [10.75, 8.7, 0], [0.1, 0.18, 18]], ['#b197fc', [-10.75, 8.7, 0], [0.1, 0.18, 18]]].forEach(([col, p, sz]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(...sz), basic(col)); m.position.set(...p); B.add(m);
+      for (let k = -4; k <= 4; k++) { const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: col, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending })); g.scale.set(4, 2.4, 1); g.position.set(p[0] + (sz[0] > 1 ? k * 2.4 : 0), p[1] - 0.3, p[2] + (sz[2] > 1 ? k * 2.0 : 0)); B.add(g); } });
+    // string lights above the bed
+    for (let k = 0; k < 11; k++) { const x = -4 + k * 0.8, y = 7.3 - 0.45 * Math.sin((k / 10) * Math.PI); const b = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), basic(['#ffd43b', '#ff8787', '#74c0fc', '#69db7c'][k % 4])); b.position.set(x, y, -8.7); B.add(b);
+      const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffe8a3', transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending })); g.scale.set(0.9, 0.9, 1); g.position.set(x, y, -8.6); B.add(g); }
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(22, 18), mat('#2b2660')); ceil.rotation.x = Math.PI / 2; ceil.position.y = 9.05; B.add(ceil);
+    // floor: round rug, beanbag, balls, skateboard, sneakers, laundry
+    const rug = new THREE.Mesh(new THREE.CircleGeometry(3.2, 32), mat('#4dabf7')); rug.rotation.x = -Math.PI / 2; rug.position.set(-5, 0.03, 3.5); B.add(rug); const rug2 = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.6, 32), mat('#ffd43b')); rug2.rotation.x = -Math.PI / 2; rug2.position.set(-5, 0.04, 3.5); B.add(rug2);
+    const bb = new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 12), mat('#40c057')); bb.scale.set(1.1, 0.7, 1.1); bb.position.set(-7.5, 1.0, 5.5); B.add(bb);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 10), mat('#f76707')); ball.position.set(-3.2, 0.55, 6.5); B.add(ball);
+    const sb = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 10), mat('#f8f9fa')); sb.position.set(4.2, 0.5, 6.8); B.add(sb);
+    const sk = new THREE.Group(); sk.add(box(0.9, 0.12, 3.0, '#7048e8', 0, 0, 0, 0.05)); [-1.1, 1.1].forEach((z) => sk.add(box(0.9, 0.2, 0.2, '#ffd43b', 0, -0.16, z))); sk.position.set(10.4, 1.6, 7.2); sk.rotation.x = -1.2; sk.rotation.z = 0.15; B.add(sk);
+    [[3.2, 2.6], [3.9, 2.9]].forEach(([x, z]) => B.add(box(0.6, 0.35, 1.1, '#e03131', x, 0.18, z, 0.12), box(0.62, 0.1, 1.12, '#fff', x, 0.05, z)));
+    [['#228be6', -8.6, -6.4], ['#fa5252', -8.0, -6.0], ['#fab005', -8.4, -5.6]].forEach(([col, x, z], i) => { const l = box(1.6, 0.35, 1.2, col, x, 0.2 + i * 0.25, z, 0.15); l.rotation.y = i * 0.7; B.add(l); });
+  }
   B.add(box(1.8, 2, 1.8, '#8a5a35', 3.8, 1, -5.4));
   W.clock = new THREE.Group(); const cb = box(1.4, 0.8, 0.6, '#212529', 0, 0.4, 0, 0.1); W.clock.add(cb);
   W.clockCanvas = document.createElement('canvas'); W.clockCanvas.width = 512; W.clockCanvas.height = 256; W.clockTex = new THREE.CanvasTexture(W.clockCanvas);

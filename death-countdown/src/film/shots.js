@@ -236,7 +236,7 @@ export function makeShots(X) {
     light('inNight', [SET.bedroom.x, 0, SET.bedroom.z]); W.moon.intensity = 1.8; W.nightLamp.intensity = 40; hemi.intensity = 0.85;
     heroInBed(lt / d > 0.62 ? 'peek' : 'sleep'); C.hero.armR.rotation.x = -0.35;
     const m = C.mom; m.place(B(3.5, 0, -2.6).x, 0, B(0, 0, -2.6).z, -PI / 2); m.upper.rotation.x = 0.5; m.armL.rotation.x = -1.0; m.armR.rotation.x = -0.9; m.expr = 'cry';
-    const e = smooth(lt / d); cam(B(lerp(-7, -6, e), lerp(6.8, 6, e), lerp(-0.5, -1.5, e)), B(1.8, 3, -3.4), 44);
+    const e = smooth(lt / d); cam(B(lerp(-8.6, -6.2, e), lerp(8.4, 7.6, e), lerp(9.0, 5.8, e)), B(lerp(1.5, 1.6, e), lerp(3.4, 3.0, e), lerp(-3.5, -3.4, e)), lerp(62, 52, e));
   } });
   function heroInBed(expr) {
     const h = C.hero; h.place(B(0, 0, 0).x, 2.5, B(0, 0, -0.7).z, 0); h.root.rotation.x = -PI / 2; h.expr = expr; h.noBlink = true;
