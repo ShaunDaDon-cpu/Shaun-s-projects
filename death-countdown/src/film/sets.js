@@ -182,8 +182,8 @@ export function buildWorld(scene) {
     for (let k = 0; k < 26; k++) { const x = (Rs() - 0.5) * 180; if (Math.abs(x) < 9) continue; H.add(tree(x, 24 + Rs() * 6, 0.9 + Rs() * 0.4)); }
     for (let k = 0; k < 30; k++) H.add(tree((Rs() - 0.5) * 300, 70 + Rs() * 50, 1 + Rs() * 0.6));
     const parked = new THREE.Group(); parked.add(box(3.4, 1.4, 6.5, '#e03131', 0, 1.0, 0, 0.3), box(3.0, 1.1, 3.4, '#1c1f2b', 0, 2.1, -0.4, 0.3)); parked.position.set(-14, 0, 44.5); parked.rotation.y = Math.PI / 2; H.add(parked); }
-  W.porchLamp = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.5), basic('#ffe9a8')); W.porchLamp.position.set(2.6, 5, 12.6); H.add(W.porchLamp);
-  W.porchLight = new THREE.PointLight('#ffd58a', 0, 30, 1.2); W.porchLight.position.set(2.6, 5.5, 14); H.add(W.porchLight);
+  W.porchLamp = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.5), basic('#ffe9a8')); W.porchLamp.position.set(2.6, 9.6, 12.6); H.add(W.porchLamp);
+  W.porchLight = new THREE.PointLight('#ffd58a', 0, 30, 1.2); W.porchLight.position.set(2.6, 10.2, 14); H.add(W.porchLight);
   [-5.5, 5.5].forEach((x) => H.add(box(0.5, 11.6, 0.5, '#fff', x, 5.8, 18.8)));
   H.add(box(12.6, 0.5, 7.4, '#5b3a29', 0, 11.8, 15.7));
   // couch
