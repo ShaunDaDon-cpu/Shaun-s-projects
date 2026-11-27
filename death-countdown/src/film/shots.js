@@ -264,11 +264,12 @@ export function makeShots(X) {
   S.push({ line: 14, update(lt, d, T) {
     light('night', [SET.house.x, 0, SET.house.z + 16]); W.porchLight.intensity = 30; hemi.intensity = 0.5;
     const xs = [-3.3, 0, 3.3]; const fw = word(14, 'face'), ov = word(14, 'overdue');
-    C.col.forEach((c, i) => { c.place(H(xs[i], 0, 0).x, 0.4, H(0, 0, [17.6, 18.4, 17.6][i]).z, PI + [0.25, 0, -0.25][i]); c.headG.rotation.x = 0.12; c.screenMode = T > fw - 0.35 + i * 0.18 ? 'face' : 'static'; });
+    C.col.forEach((c, i) => { c.place(H(xs[i] * 1.15, 0, 0).x, 0, H(0, 0, [21.2, 22.0, 21.2][i]).z, PI + [0.25, 0, -0.25][i]); c.headG.rotation.x = 0.12; c.screenMode = T > fw - 0.35 + i * 0.18 ? 'face' : 'static'; });
     const head = (i) => { const p = new THREE.Vector3(); C.col[i].face.getWorldPosition(p); return p; };
-    const red = clamp((T - fw) / 0.6); fx.color.set('#ff2240'); fx.intensity = 40 * red; fx.position.copy(H(0, 6.5, 14.5));
-    if (T < ov - 0.15) { const u = smooth(seg(lt, 0, ov - 0.15 - (T - lt))); const tgt = u < 0.5 ? head(0).lerp(head(1), u * 2) : head(1).lerp(head(2), u * 2 - 1); cam(tgt.clone().add(new THREE.Vector3(0, -0.1, -4.4)), tgt, 40); }
-    else { const k = easeOut(seg(T, ov - 0.15, ov + 0.6)); const hp = head(1); cam(hp.clone().add(new THREE.Vector3(0, -0.1, lerp(-5.3, -3.8, k))), hp, 40, { shake: imp(T, ov - 0.1, 0.4, 0.15), T }); UI.flash(imp(T, ov - 0.12, 0.25, 0.5), '#ff2240'); }
+    const red = clamp((T - fw) / 0.6); fx.color.set('#ff2240'); fx.intensity = 40 * red; fx.position.copy(H(0, 6.5, 17.5));
+    const body = (i) => { const p = C.col[i].root.position.clone(); p.y = 4.3; return p; };
+    if (T < ov - 0.15) { const u = smooth(seg(lt, 0, ov - 0.15 - (T - lt))); const tgt = u < 0.5 ? body(0).lerp(body(1), u * 2) : body(1).lerp(body(2), u * 2 - 1); cam(tgt.clone().add(new THREE.Vector3(0, 0.4, -8.0)), tgt, 70); }
+    else { const k = easeOut(seg(T, ov - 0.15, ov + 0.6)); const hp = head(1); cam(hp.clone().add(new THREE.Vector3(0, -0.1, lerp(-8.4, -3.8, k))), hp.clone().add(new THREE.Vector3(0, lerp(-2.0, 0, k), 0)), lerp(70, 40, k), { shake: imp(T, ov - 0.1, 0.4, 0.15), T }); UI.flash(imp(T, ov - 0.12, 0.25, 0.5), '#ff2240'); }
   } });
   // 15 — Dad: Nobody opens that door!
   S.push({ line: 15, update(lt, d, T) {

@@ -158,12 +158,34 @@ export function buildWorld(scene) {
   W.door.position.set(-1.55, 0, 12); H.add(W.door);
   // porch
   const porch = box(12, 0.4, 7, '#a0785a', 0, 0.2, 15.7); H.add(porch); H.add(box(2, 0.25, 1, '#bf9a7a', 0, 0.12, 19.6));
-  const pfront = new THREE.Mesh(new THREE.PlaneGeometry(40, 12), mat('#7fc8ff')); pfront.position.set(0, 5, 12.22); H.add(pfront);
-  const pground = new THREE.Mesh(new THREE.PlaneGeometry(80, 40), mat('#2f6b3a')); pground.rotation.x = -Math.PI / 2; pground.position.set(0, 0.01, 32); H.add(pground);
+  const pfront = new THREE.Mesh(new THREE.PlaneGeometry(40, 18), mat('#7fc8ff')); pfront.position.set(0, 8, 12.22); H.add(pfront);
+  const pground = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), mat('#2f6b3a')); pground.rotation.x = -Math.PI / 2; pground.position.set(0, 0.01, 160); H.add(pground);
+  // night street seen from the porch: road, sidewalks, houses with lit windows, street lamps, trees
+  { const Rs = rng(77);
+    const rd = new THREE.Mesh(new THREE.PlaneGeometry(400, 11), mat('#3c404c')); rd.rotation.x = -Math.PI / 2; rd.position.set(0, 0.03, 40); H.add(rd);
+    for (let x = -190; x < 190; x += 7) { const dl = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.4), basic('#d8b93a')); dl.rotation.x = -Math.PI / 2; dl.position.set(x, 0.05, 40); H.add(dl); }
+    [33.2, 46.8].forEach((z) => H.add(box(400, 0.3, 3, '#b9b6c6', 0, 0.15, z)));
+    H.add(box(3, 0.2, 10, '#c8b89a', 0, 0.1, 25.8));
+    const winOn = basic('#ffd27a'), winOff = basic('#232a45');
+    const housesAt = (z, flip, n0, n1, step) => { for (let i = n0; i <= n1; i++) { const x = i * step + (Rs() - 0.5) * 2; const w = 9 + Rs() * 3, h = 5 + Rs() * 2.5, d = 8; const g = new THREE.Group(); g.position.set(x, 0, z); if (flip) g.rotation.y = Math.PI;
+      g.add(box(w, h, d, HOUSE_COLS[(i + 40) % HOUSE_COLS.length], 0, h / 2, 0)); const rf = roofMesh(w + 1, d + 1, ROOF_COLS[(i + 42) % ROOF_COLS.length]); rf.position.y = h + 1.6; g.add(rf);
+      g.add(box(1.6, 3, 0.2, '#6b3f22', 0, 1.5, d / 2 + 0.05));
+      [-w / 3, w / 3].forEach((wx) => { const wm = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.6, 0.15), Rs() < 0.7 ? winOn : winOff); wm.position.set(wx, h * 0.55, d / 2 + 0.06); g.add(wm); });
+      if (Rs() < 0.6) { const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffcf6b', transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending })); gl.scale.set(5, 5, 1); gl.position.set(1.4, 3.3, d / 2 + 0.6); g.add(gl); }
+      H.add(g); } };
+    housesAt(58, true, -9, 9, 14); housesAt(92, true, -11, 11, 15); housesAt(-200, false, 0, -1, 1);
+    for (let x = -84; x <= 84; x += 21) { const lp = new THREE.Group(); const p = cyl(0.14, 0.18, 7, '#4b4f63', 8); p.position.y = 3.5; lp.add(p); lp.add(box(1.2, 0.3, 0.5, '#4b4f63', 0, 7, -0.4));
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.14, 0.4), basic('#fff6c7')); b.position.set(0, 6.83, -0.5); lp.add(b);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffe7a3', transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending })); gl.scale.set(7, 7, 1); gl.position.set(0, 6.6, -0.5); lp.add(gl);
+      const pool = new THREE.Mesh(new THREE.CircleGeometry(4.5, 20), new THREE.MeshBasicMaterial({ color: '#ffe0a0', transparent: true, opacity: 0.16, depthWrite: false })); pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.06, -1.8); lp.add(pool);
+      lp.position.set(x + 8, 0, 34); H.add(lp); }
+    for (let k = 0; k < 26; k++) { const x = (Rs() - 0.5) * 180; if (Math.abs(x) < 9) continue; H.add(tree(x, 24 + Rs() * 6, 0.9 + Rs() * 0.4)); }
+    for (let k = 0; k < 30; k++) H.add(tree((Rs() - 0.5) * 300, 70 + Rs() * 50, 1 + Rs() * 0.6));
+    const parked = new THREE.Group(); parked.add(box(3.4, 1.4, 6.5, '#e03131', 0, 1.0, 0, 0.3), box(3.0, 1.1, 3.4, '#1c1f2b', 0, 2.1, -0.4, 0.3)); parked.position.set(-14, 0, 44.5); parked.rotation.y = Math.PI / 2; H.add(parked); }
   W.porchLamp = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.5), basic('#ffe9a8')); W.porchLamp.position.set(2.6, 5, 12.6); H.add(W.porchLamp);
   W.porchLight = new THREE.PointLight('#ffd58a', 0, 30, 1.2); W.porchLight.position.set(2.6, 5.5, 14); H.add(W.porchLight);
-  [-5.5, 5.5].forEach((x) => H.add(box(0.5, 7, 0.5, '#fff', x, 3.5, 18.8)));
-  H.add(box(12.6, 0.5, 7.4, '#5b3a29', 0, 7.2, 15.7));
+  [-5.5, 5.5].forEach((x) => H.add(box(0.5, 11.6, 0.5, '#fff', x, 5.8, 18.8)));
+  H.add(box(12.6, 0.5, 7.4, '#5b3a29', 0, 11.8, 15.7));
   // couch
   W.couch = new THREE.Group(); W.couchL = new THREE.Group(); W.couchR = new THREE.Group();
   [W.couchL, W.couchR].forEach((g, i) => { const s = i ? 1 : -1; g.add(box(3.6, 1.4, 3.2, '#6c63ff', s * 1.8, 0.9, 0, 0.2), box(3.6, 2.4, 0.9, '#5a52e0', s * 1.8, 2, -1.3, 0.25), box(0.8, 2, 3.2, '#5a52e0', s * 3.6, 1.2, 0, 0.25)); W.couch.add(g); });
