@@ -69,11 +69,50 @@ export function buildWorld(scene) {
   sky.add(plane); W.plane = plane;
   // ---------- BUS CRASH ----------
   const bus = new THREE.Group(); bus.position.copy(SET.bus); scene.add(bus);
-  const br = new THREE.Mesh(new THREE.PlaneGeometry(14, 160), mat('#2b2e38')); br.rotation.x = -Math.PI / 2; br.position.y = 0.02; br.receiveShadow = true; bus.add(br);
+  const br = new THREE.Mesh(new THREE.PlaneGeometry(14, 160), mat('#5a5e6b')); br.rotation.x = -Math.PI / 2; br.position.y = 0.02; br.receiveShadow = true; bus.add(br);
   const bg = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), mat('#2e5a3a')); bg.rotation.x = -Math.PI / 2; bus.add(bg);
-  const bb = new THREE.Group(); bb.add(box(4.4, 4.2, 14, '#ffc61a', 0, 2.6, 0, 0.3)); bb.add(box(4.5, 1.2, 12, '#20232e', 0, 3.4, -0.5)); bb.add(box(4.5, 0.3, 14.1, '#222', 0, 1.6, 0));
-  [-4.5, 4.5].forEach((zz) => [-2.1, 2.1].forEach((xx) => { const w = cyl(1, 1, 0.6, '#1a1a1a', 14); w.rotation.z = Math.PI / 2; w.position.set(xx, 0.9, zz); bb.add(w); }));
+  // wrecked bus (local +z = front): crushed nose, shattered windows, dents, hanging door, missing wheel
+  const bb = new THREE.Group(); const Y = '#ffc61a', Yd = '#d9a40f';
+  bb.add(box(4.4, 4.2, 10.5, Y, 0, 2.6, -1.6, 0.3));
+  const nose = new THREE.Group(); nose.add(box(4.3, 3.6, 3.2, Yd, 0, 0, 0, 0.25)); nose.add(box(4.0, 1.2, 2.2, '#8a6a10', 0, -1.2, 1.0)); nose.position.set(0.3, 2.3, 5.0); nose.rotation.set(0.25, 0.35, -0.12); nose.scale.set(1, 0.85, 0.7); bb.add(nose);
+  bb.add(box(4.6, 0.5, 1.2, '#3a3a3a', 0.4, 1.0, 6.4).rotateZ(0.3).rotateY(0.4));
+  const R4 = rng(31);
+  for (let k = 0; k < 6; k++) { const z = -6 + k * 1.9; const broken = k % 2 === 1 || k === 4;
+    bb.add(box(4.52, 1.2, 1.6, broken ? '#0a0b10' : '#2a3040', 0, 3.4, z));
+    if (broken) for (let q = 0; q < 4; q++) { const sh = box(0.05, 0.35 + R4() * 0.5, 0.25 + R4() * 0.3, '#d7e6f2', 2.27, 3.0 + R4() * 0.8, z - 0.6 + R4() * 1.2); sh.rotation.x = R4() * 2; bb.add(sh); } }
+  for (let k = 0; k < 7; k++) { const d = box(0.3, 0.8 + R4(), 1.2 + R4() * 1.5, '#9c7a12', 2.12 + R4() * 0.1, 1.6 + R4() * 2, -6 + R4() * 10, 0.2); d.rotation.set(R4() * 0.5, 0, R4() * 0.5); bb.add(d); }
+  bb.add(box(4.5, 0.3, 14.1, '#222', 0, 1.6, -0.5));
+  for (let k = 0; k < 9; k++) { const sc = box(0.25 + R4() * 0.5, 0.1, 1.5 + R4() * 3, ['#5c4308', '#2b2b2b', '#7a5c0c'][k % 3], (R4() - 0.5) * 3.4, 4.72, -6.5 + R4() * 10); sc.rotation.y = (R4() - 0.5) * 0.8; bb.add(sc); }
+  [[-0.6, -3.5, 2.2], [0.8, 0.5, 1.6], [-0.9, 2.6, 1.3]].forEach(([x, z, r]) => { const dn = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 6), mat('#a8820e')); dn.scale.set(1, 0.18, 1.3); dn.position.set(x, 4.62, z); bb.add(dn); });
+  bb.add(box(4.6, 0.4, 0.3, '#5c4308', 0, 4.6, -1.0).rotateX(0.15));
+  [[-4.5, -2.1], [-4.5, 2.1], [4.5, -2.1]].forEach(([zz, xx]) => { const w = cyl(1, 1, 0.6, '#1a1a1a', 14); w.rotation.z = Math.PI / 2; w.position.set(xx, 0.9, zz); bb.add(w); });
+  const door = box(0.15, 3.0, 1.4, Yd, -2.5, 2.0, 3.3); door.rotation.set(0.5, 0.9, 0.3); bb.add(door);
   bb.rotation.z = 1.35; bb.rotation.y = 0.5; bb.position.set(2.5, 0.6, 0); bus.add(bb);
+  const wheel = cyl(1, 1, 0.6, '#1a1a1a', 14); wheel.position.set(-4.5, 0.32, 6.5); bus.add(wheel);
+  W.fire = new THREE.PointLight('#ff8a2a', 0, 18, 1.4); W.fire.position.set(5, 2.5, 5.5); bus.add(W.fire);
+  W.fireGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffb05a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })); W.fireGlow.scale.set(5, 5, 1); W.fireGlow.position.set(5, 2.4, 5.2); bus.add(W.fireGlow);
+  // torn-up road: skid marks, cracks, potholes, broken centre line, debris, glass, smashed guardrail
+  for (let z = -78; z < 80; z += 6) { if (Math.abs(z + 2) < 14) continue; const dsh = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 3), basic('#c9b458')); dsh.rotation.x = -Math.PI / 2; dsh.position.set(0, 0.03, z); bus.add(dsh); }
+  for (let side of [-1.1, 1.1]) for (let k = 0; k < 26; k++) { const t = k / 25; const x = -1.5 + side + Math.sin(t * 2.2) * 4.2 * t, z = 38 - t * 34; const sk = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.6), basic('#0b0b0d')); sk.rotation.x = -Math.PI / 2; sk.rotation.z = -Math.cos(t * 2.2) * 0.9 * t; sk.position.set(x, 0.035, z); bus.add(sk); }
+  for (let k = 0; k < 22; k++) { const cr = box(0.12, 0.04, 1.5 + R4() * 3.5, '#0e0f13', (R4() - 0.5) * 12, 0.04, -14 + R4() * 34); cr.rotation.y = R4() * 3; cr.castShadow = false; bus.add(cr); }
+  [[-3.5, 12, 1.4], [4.8, -6, 1.1], [-1.5, 22, 0.9], [2.5, 15, 0.7], [-4.5, -3, 1.0]].forEach(([x, z, r]) => { const ph = new THREE.Mesh(new THREE.CircleGeometry(r, 10), basic('#08080a')); ph.rotation.x = -Math.PI / 2; ph.position.set(x, 0.04, z); bus.add(ph); });
+  const oil = new THREE.Mesh(new THREE.CircleGeometry(2.4, 18), new THREE.MeshPhongMaterial({ color: '#050507', shininess: 120, specular: '#888' })); oil.rotation.x = -Math.PI / 2; oil.position.set(-0.5, 0.045, 5.5); oil.scale.set(1.4, 0.8, 1); bus.add(oil);
+  for (let k = 0; k < 34; k++) { const db = box(0.3 + R4() * 0.9, 0.2 + R4() * 0.4, 0.3 + R4() * 0.9, ['#ffc61a', '#3a3a3a', '#d9a40f', '#6b6b6b'][k % 4], (R4() - 0.5) * 14, 0.15, -6 + R4() * 26); db.rotation.set(R4() * 3, R4() * 3, R4() * 3); bus.add(db); }
+  for (let k = 0; k < 60; k++) { const gl = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, 0.12), basic('#e8f4ff')); gl.position.set((R4() - 0.5) * 12, 0.06, -2 + R4() * 16); gl.rotation.y = R4() * 3; bus.add(gl); }
+  for (let z = -60; z < 60; z += 4) { const broken = z > -4 && z < 12; const px = 7.6; if (!broken) { bus.add(box(0.3, 1.6, 0.3, '#9aa0a8', px, 0.8, z)); bus.add(box(0.2, 0.5, 4.05, '#c4c9d0', px - 0.2, 1.35, z + 2)); } }
+  const rail = box(0.2, 0.5, 6, '#c4c9d0', 9.5, 1.1, 5); rail.rotation.set(0.4, 0.8, 0.5); bus.add(rail); const rail2 = box(0.2, 0.5, 5, '#c4c9d0', 8.6, 0.5, -1); rail2.rotation.set(-0.3, -0.5, 1.2); bus.add(rail2);
+  // pine forest on both sides of the road
+  { const Rf = rng(123); const pts = [];
+    const segD = (x, z) => { const ax = -20, az = 30, bx = 3, bz = 2; const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2))); return Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az)); };
+    while (pts.length < 280) { const x = (Rf() - 0.5) * 150, z = -95 + Rf() * 140; if (Math.abs(x) < 10.5) continue; if (segD(x, z) < 9 || Math.hypot(x + 18, z - 28) < 14) continue; pts.push([x, z, 0.8 + Rf() * 0.9]); }
+    const trunkG = new THREE.CylinderGeometry(0.35, 0.5, 3, 7), tiers = [[3.4, 4.2, 4.2], [2.7, 3.6, 6.4], [1.9, 3.0, 8.4]].map(([r, h, y]) => ({ g: new THREE.ConeGeometry(r, h, 8), y }));
+    const tI = new THREE.InstancedMesh(trunkG, mat('#5a3d27'), pts.length); tI.castShadow = true;
+    const cI = tiers.map((t, i) => { const m = new THREE.InstancedMesh(t.g, mat(['#1f6b3a', '#26804a', '#2f9457'][i]), pts.length); m.castShadow = true; m.receiveShadow = true; return m; });
+    const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), Sv = new THREE.Vector3(), P = new THREE.Vector3();
+    pts.forEach(([x, z, sc], i) => { Q.setFromEuler(new THREE.Euler(0, Rf() * 6, 0)); Sv.set(sc, sc * (0.9 + Rf() * 0.4), sc); P.set(x, 1.5 * Sv.y, z); M.compose(P, Q, Sv); tI.setMatrixAt(i, M); cI.forEach((m, k) => { P.set(x, tiers[k].y * Sv.y, z); M.compose(P, Q, Sv); m.setMatrixAt(i, M); }); });
+    bus.add(tI, ...cI); }
+  // smoke
+  W.smoke = makeParticles(scene, 70, '#9a9a9a', 3.2); W.smoke.material.blending = THREE.NormalBlending;
   const cop = new THREE.Group(); cop.add(box(3.6, 1.6, 7, '#f8f9fa', 0, 1.2, 0, 0.3), box(3.4, 1.3, 3.6, '#1c1f2b', 0, 2.5, -0.3, 0.3)); W.siren = [box(0.9, 0.35, 0.6, '#ff2a40', -0.6, 3.3, -0.3), box(0.9, 0.35, 0.6, '#2a6bff', 0.6, 3.3, -0.3)]; W.siren.forEach((s) => { s.material = basic(s.material.color.getStyle()); cop.add(s); });
   cop.position.set(9, 0, 8); cop.rotation.y = -0.9; bus.add(cop);
   W.copLights = [new THREE.PointLight('#ff2a40', 0, 40, 1.5), new THREE.PointLight('#2a6bff', 0, 40, 1.5)]; W.copLights.forEach((l, i) => { l.position.set(9 + (i ? 1 : -1), 4.5, 6.5); bus.add(l); });

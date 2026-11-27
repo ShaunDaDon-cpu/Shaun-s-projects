@@ -184,8 +184,12 @@ export function makeShots(X) {
     light('night', [SET.bus.x, 0, SET.bus.z]); rain(T, SET.bus); hemi.intensity = 1.3;
     W.copLights[0].intensity = Math.sin(T * 14) > 0 ? 260 : 0; W.copLights[1].intensity = Math.sin(T * 14) > 0 ? 0 : 260;
     W.siren[0].material.color.set(Math.sin(T * 14) > 0 ? '#ff2a40' : '#4a0a10'); W.siren[1].material.color.set(Math.sin(T * 14) > 0 ? '#0a1640' : '#2a6bff');
-    const e = smooth(lt / d); cam(BS(lerp(-20, -16, e), lerp(11, 8.5, e), lerp(30, 25, e)), BS(3, 1.5, 2), 40);
-    UI.filter('grayscale(0.8) contrast(1.15) brightness(1.25)'); UI.vignette(0.95);
+    const e = smooth(lt / d); cam(BS(lerp(-17, -13.5, e), lerp(17, 14, e), lerp(27, 22, e)), BS(2.5, 1, 3), 42);
+    { const fl = 0.75 + 0.25 * Math.sin(T * 23) * Math.sin(T * 7.1); W.fire.intensity = 70 * fl; W.fireGlow.material.opacity = 0.75 * fl;
+      const P = W.smoke, at = P.geometry.attributes.position, r = L.rng(19); P.visible = true; P.material.opacity = 0.55; P.material.size = 3.2;
+      for (let i = 0; i < P.n; i++) { const ph = ((T * 0.22) + i / P.n) % 1; at.setXYZ(i, SET.bus.x + 5 + (r() - 0.5) * 1.5 + ph * 5 + Math.sin(ph * 6 + i) * 0.8, 2 + ph * 16, SET.bus.z + 5 + (r() - 0.5) * 1.5 - ph * 3); }
+      at.needsUpdate = true; }
+    UI.filter('grayscale(0.72) contrast(1.15) brightness(1.25)'); UI.vignette(0.95);
     UI.add('3 YEARS AGO', 'left:50%;top:200px;transform:translateX(-50%);font-size:64px;letter-spacing:10px;opacity:0.9');
   } });
   // 8 — cafeteria tray
