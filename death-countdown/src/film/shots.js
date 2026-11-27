@@ -404,7 +404,7 @@ export function makeShots(X) {
     houseNight(); W.door.visible = false;
     const h = C.hero; h.place(H(0, 0, 2).x, 0, H(0, 0, 2).z, 0); h.expr = 'shock';
     const raise = easeOut(seg(lt, 0.3, 1.3)); const hh = h.headWorld();
-    [[C.mom, -2.5, 6.6, 1, 'kind'], [C.dad, 0, 7.2, 2, 'determined'], [C.sis, 2.4, 6.5, 3, 'grin']].forEach(([r, x, z, pi, ex], i) => { r.place(H(x, 0, z).x, 0, H(0, 0, z).z, PI - x * 0.06); r.expr = ex; r.armR.rotation.x = lerp(0, -1.65, raise); const ph = hold(r, C.phones[pi], hh, 'R', 0.3, 1.2); ph.countdown([47, 52, 71][i] * YEAR + [112, 9, 300][i] * 86400 - T, { color: ['#ff8fd0', '#7fd8ff', '#7cffb2'][i] }); });
+    [[C.mom, 0, 7.2, 1, 'kind'], [C.dad, -2.6, 6.6, 2, 'determined'], [C.sis, 2.4, 6.5, 3, 'grin']].forEach(([r, x, z, pi, ex], i) => { r.place(H(x, 0, z).x, 0, H(0, 0, z).z, PI - x * 0.06); r.expr = ex; r.armR.rotation.x = lerp(0, -1.65, raise); const ph = hold(r, C.phones[pi], hh, 'R', 0.3, 1.2); ph.countdown([47, 52, 71][i] * YEAR + [112, 9, 300][i] * 86400 - T, { color: ['#ff8fd0', '#7fd8ff', '#7cffb2'][i] }); });
     const g = C.gma; sitAt(g, H(6.5, 0, 0).x, 0, H(0, 0, 0).z, -0.5, 1.6); g.expr = 'kind';
     const a = smooth(lt / d); cam(H(lerp(1.4, 6.8, a), lerp(6, 5.6, a), lerp(-3, 2.8, a)), H(0, 4.3, lerp(6.8, 5.6, a)), 46);
   } });
@@ -413,7 +413,7 @@ export function makeShots(X) {
     houseNight(); W.door.visible = false;
     const cp = H(0, 4.9, 2.3);
     const e = smooth(seg(lt, 0.4, d - 0.2)); const hb = cp.clone().add(new THREE.Vector3(-1.05, -1.1, 1.0));
-    [[C.mom, -2.5, 6.6, 1, 'kind'], [C.dad, 0, 7.2, 2, 'kind'], [C.sis, 2.4, 6.5, 3, 'grin']].forEach(([r, x, z, pi, ex], i) => { r.place(H(x, 0, z).x, 0, H(0, 0, z).z, PI - x * 0.06); r.expr = ex; r.armR.rotation.x = -1.65; const ph = hold(r, C.phones[pi], cp, 'R', 0.3, 1.2); ph.countdown([47, 52, 71][i] * YEAR + [112, 9, 300][i] * 86400 - lerp(0, 10 * YEAR, e), { color: ['#ff8fd0', '#7fd8ff', '#7cffb2'][i] }); if (e > 0 && e < 1) stream(i === 0 ? W.orbs : i === 1 ? W.sparks : W.dust, ph.g.position.clone(), hb, T + i * 0.3, { arc: 0.6, n: 40, size: 0.25, jit: 0.15, speed: 1.2 }); });
+    [[C.mom, 0, 7.2, 1, 'kind'], [C.dad, -2.6, 6.6, 2, 'kind'], [C.sis, 2.4, 6.5, 3, 'grin']].forEach(([r, x, z, pi, ex], i) => { r.place(H(x, 0, z).x, 0, H(0, 0, z).z, PI - x * 0.06); r.expr = ex; r.armR.rotation.x = -1.65; const ph = hold(r, C.phones[pi], cp, 'R', 0.3, 1.2); ph.countdown([47, 52, 71][i] * YEAR + [112, 9, 300][i] * 86400 - lerp(0, 10 * YEAR, e), { color: ['#ff8fd0', '#7fd8ff', '#7cffb2'][i] }); if (e > 0 && e < 1) stream(i === 0 ? W.orbs : i === 1 ? W.sparks : W.dust, ph.g.position.clone(), hb, T + i * 0.3, { arc: 0.6, n: 40, size: 0.25, jit: 0.15, speed: 1.2 }); });
     W.sparks.material.color.set('#5dff9c'); W.dust.material.color.set('#5dff9c');
     cam(cp, H(0, 4.4, 7), 46);
     const ph = C.phones[0]; ph.g.visible = true; ph.g.position.copy(hb); ph.g.lookAt(cp); ph.g.scale.setScalar(1); ph.countdown(lerp(31 * YEAR, 61 * YEAR, e), { color: '#4dff9a', top: 'ME' });
@@ -426,9 +426,9 @@ export function makeShots(X) {
     const dd = C.dad; dd.place(H(-4, 0, 2).x, 3.5, H(0, 0, 2).z, 0); dd.root.rotation.x = PI; dd.legL.rotation.x = Math.sin(T * 13) * 0.55; dd.legR.rotation.x = -Math.sin(T * 13) * 0.55;
     const g = C.gma; sitAt(g, H(6.5, 0, 0).x, 0, H(0, 0, 0).z, -0.5, 1.6); g.expr = 'laugh'; g.upper.rotation.x = -0.12 + Math.sin(T * 16) * 0.06; g.headG.rotation.x = -0.15; g.armR.rotation.x = -0.9; g.armL.rotation.x = -0.4; g.armL.rotation.z = 0.5;
     const ph = hold(g, C.phones[1], camera.position.clone(), 'R', 0.25, 1.1);
-    [[C.mom, 0.5, 6.4, -2.6, 'laugh'], [C.sis, -1.4, 7, -2.8, 'laugh'], [C.hero, 2.6, 4.6, -2.2, 'grin']].forEach(([r, x, z, ry, ex]) => { r.place(H(x, 0, z).x, 0, H(0, 0, z).z, ry); r.expr = ex; r.upper.rotation.x = Math.sin(T * 14 + x) * 0.05; });
+    [[C.mom, 1.5, 4.0, -1.92, 'laugh'], [C.sis, -7.4, 4.6, 2.4, 'laugh'], [C.hero, 8.8, 7.6, -2.4, 'grin']].forEach(([r, x, z, ry, ex]) => { r.place(H(x, 0, z).x, 0, H(0, 0, z).z, ry); r.expr = ex; r.upper.rotation.x = Math.sin(T * 14 + x) * 0.05; });
     const sw = d * 0.42;
-    if (lt < sw) cam(H(lerp(10, 9.4, lt / sw), 6.2, lerp(13, 12.4, lt / sw)), H(1, 2.4, 2), 48);
+    if (lt < sw) cam(H(lerp(0.2, -0.6, lt / sw), 4.8, lerp(8.2, 7.4, lt / sw)), H(-4, 3.2, 2), 46, { shake: 0.03, T });
     else { const hp = g.headWorld(); const f = new THREE.Vector3(Math.sin(-0.5), 0, Math.cos(-0.5)); const k = smooth(seg(lt, sw, d)); cam(hp.clone().addScaledVector(f, lerp(6.2, 4.3, k)).add(new THREE.Vector3(-0.8, 0.2, 0)), hp.clone().add(new THREE.Vector3(0, -0.6, 0)), 42); }
     hold(g, C.phones[1], camera.position.clone(), 'R', 0.25, 1.1); ph.countdown(30 - (T - lines[30].start) * 0.9, { color: '#d6a8ff' });
   } });
