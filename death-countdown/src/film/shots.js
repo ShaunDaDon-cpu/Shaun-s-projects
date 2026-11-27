@@ -337,12 +337,17 @@ export function makeShots(X) {
     W.doorCrack.material.opacity = 1;
     W.porchLight.intensity = lt > b ? 160 : 25; fx2.color.set('#cfe0ff'); fx2.intensity = lt > b ? 110 : 0; fx2.position.copy(H(0, 6, 15.5));
     C.col.forEach((c, i) => { c.place(H([0, -2.4, 2.4][i], 0, 0).x, 0.4, H(0, 0, [13.6, 15.2, 15.2][i]).z, PI); c.screenMode = 'face'; c.root.visible = !pre; });
+    // the middle Collector leans down through the doorway and pushes his head into the house, in stuttering jerks
+    { const c = C.col[0]; const k = smooth(seg(lt, 0.55, d - 0.1)); const st = Math.floor(k * 8) / 8; const jit = (L.rng(Math.floor(T * 20))() - 0.5) * 0.06 * (k > 0 && k < 1 ? 1 : 0);
+      c.root.position.z = H(0, 0, lerp(13.6, 12.9, st)).z; c.upper.rotation.x = 0.72 * st + jit; c.hips.rotation.x = 0.12 * st;
+      c.headG.rotation.z = 0.75 * st + jit; c.headG.rotation.x = -0.45 * st; c.headG.position.y = 2 + 0.55 * st; c.headG.position.z = 0.35 * st;
+      c.armR.rotation.x = -2.5 * st; c.armR.rotation.z = 0.55 * st; c.armL.rotation.x = -0.6 * st; c.armL.rotation.z = -0.35 * st; }
     const dd = C.dad;
     if (pre) { dd.place(H(0, 0, 0).x, 0, H(0, 0, 11.0 - 0.12 * bulge).z, PI); dd.armL.rotation.z = -1.35; dd.armR.rotation.z = 1.35; dd.expr = 'scared'; dd.upper.rotation.x = 0.1 * bulge; }
     else { const kd = easeOut(seg(lt, b, b + 0.7)); const z = lerp(11, 6.2, kd); dd.place(H(lerp(0, -1.2, kd), 0, 0).x, lerp(0, -1.45, easeIn(kd)), H(0, 0, z).z, PI + 0.3 * kd); dd.hips.rotation.x = 1.45 * kd; dd.armL.rotation.x = dd.armR.rotation.x = -2.6 * kd; dd.expr = 'shock'; }
     W.doorBits.forEach(({ m, v, s }, i) => { const tau = lt - b; if (tau <= 0) return; m.visible = true; const o = H(0, 3.3, 11.8); m.position.set(o.x + v[0] * tau, Math.max(0.1, o.y + v[1] * tau - 9 * tau * tau), o.z + v[2] * tau); m.rotation.set(s[0] * tau, s[1] * tau, s[2] * tau); });
     burst(W.dust, H(0, 2.5, 11.6), lt - b, { speed: 10, life: 1.4, size: 1.1, dir: [0, 0, -5], seed: 8 });
-    cam(H(1.8, 2.4, 2.2), H(0, 4.6, 11), 56, { shake: imp(lt, b, 0.7, 0.45) + 0.04 * bulge, T }); UI.flash(imp(lt, b, 0.2, 0.8));
+    { const kc = smooth(seg(lt, 0.7, d)); cam(H(lerp(1.8, 1.0, kc), lerp(2.4, 3.4, kc), lerp(2.2, 5.6, kc)), H(0, lerp(4.6, 5.0, kc), 11), lerp(56, 46, kc), { shake: imp(lt, b, 0.7, 0.45) + 0.04 * bulge, T }); } UI.flash(imp(lt, b, 0.2, 0.8));
     sfx('BOOM!', 560, 420, 200, (lt - b) / 0.9, '#ffe14d', -6);
   } });
   // 20 — Mom frying pan

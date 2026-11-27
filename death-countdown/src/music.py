@@ -207,6 +207,8 @@ for x in np.arange(st[19], st[19] + 0.22, 0.07): add(sfx, x, thud(0.5), 0.4)
 add(sfx, st[19] + 0.22, boom(2.0, 90), 0.5); add(sfx, st[19] + 0.22, hp(noise(0.6), 800) * np.exp(-tt(0.6) * 6), 0.3)
 for i in range(5): add(sfx, st[19] + 0.5 + i * 0.13, knock(), 0.3, pan=rng.uniform(-.6, .6))
 add(sfx, st[19] + 1.3, thud(), 0.5)  # door lands
+for j in range(1, 9): add(sfx, st[19] + 0.55 + (L[20]['start'] - 0.12 - 0.1 - st[19] - 0.55) * (np.arccos(1 - 2 * j / 8) / np.pi), creak(120 + j * 9), 0.22)  # Collector leaning in
+add(sfx, st[19] + 0.6, lp(noise(1.0), 160) * np.sin(np.pi * tt(1.0) / 1.0) * 0.8, 0.35)  # low groan
 # bonk + crack
 hit = word(20, 'hit') + 0.05
 t = tt(0.9); bonk = np.sin(2 * np.pi * 420 * t) * np.exp(-t * 6) + 0.6 * np.sin(2 * np.pi * 1130 * t) * np.exp(-t * 9) + 0.3 * np.sin(2 * np.pi * 2210 * t) * np.exp(-t * 12)
