@@ -172,7 +172,7 @@ export class Rig {
   reset() {
     this.root.visible = false; this.root.rotation.set(0, 0, 0); this.root.position.set(0, 0, 0);
     this.hips.position.set(0, 2, 0); this.hips.rotation.set(0, 0, 0); this.upper.rotation.set(0, 0, 0);
-    [this.armL, this.armR, this.legL, this.legR, this.headG].forEach((g) => g.rotation.set(0, 0, 0));
+    [this.armL, this.armR, this.legL, this.legR, this.headG].forEach((g) => g.rotation.set(0, 0, 0)); this.headG.position.set(0, 2, 0);
     this.expr = 'neutral'; this.talk = 0; this.noBlink = false; this.headG.visible = this.armR.visible = this.armL.visible = true;
   }
   place(x, y, z, ry = 0) { this.root.visible = true; this.root.position.set(x, y, z); this.root.rotation.y = ry; return this; }

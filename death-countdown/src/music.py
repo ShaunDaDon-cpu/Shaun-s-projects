@@ -187,14 +187,18 @@ for x in np.arange(st[12], st[13], 0.5): add(sfx, x, hp(noise(0.02), 3000) * np.
 def knock(): t = tt(0.18); return (np.sin(2 * np.pi * 95 * t) * np.exp(-t * 30) + lp(noise(0.18), 900) * np.exp(-t * 45) * 0.8)
 kn = word(12, 'knocked')
 for i, k in enumerate((0.02, 0.3, 0.58)): add(sfx, kn + k, knock(), 0.9, pan=(-0.2, 0.1, 0.0)[i])
+def thud(g=1): t = tt(0.5); return (np.sin(2 * np.pi * np.cumsum(60 + 80 * np.exp(-t * 25)) / SR) * np.exp(-t * 8) + lp(noise(0.5), 1200) * np.exp(-t * 18) * 0.7) * g
 # doorbell cam static + glitches
 d13 = st[14] - st[13]; add(sfx, st[13], hp(noise(d13), 3000) * 0.08 + np.sin(2 * np.pi * 60 * tt(d13)) * 0.05, 0.5)
 add(sfx, st[13], bell(1400, 0.15), 0.12)
+# creepy head tilt: creaks on each stutter step, bone crack on the twitch
+def creak(f=180): t = tt(0.09); return bp(np.sign(np.sin(2 * np.pi * f * t)) * (1 + 0.5 * noise(0.09)), 300, 2500) * np.exp(-t * 30)
+for j in range(1, 10): x = 0.35 + 1.35 * (np.arccos(1 - 2 * j / 9) / np.pi); add(sfx, st[13] + x, creak(140 + j * 12), 0.22, pan=-0.1)
+add(sfx, st[13] + 1.95, hp(noise(0.05), 1800) * np.exp(-tt(0.05) * 90), 0.7); add(sfx, st[13] + 1.97, hp(noise(0.04), 2500) * np.exp(-tt(0.04) * 110), 0.5); add(sfx, st[13] + 1.95, thud(0.4), 0.25)
 fw = word(14, 'face'); ov = word(14, 'overdue')
 for i in range(3): add(sfx, fw - 0.35 + i * 0.18, hp(noise(0.12), 1500) * np.sign(np.sin(2 * np.pi * 40 * tt(0.12))), 0.12)
 add(sfx, ov - 0.12, boom(1.6, 55), 0.55); add(sfx, ov - 0.12, brass([m2f(n) for n in (38, 44, 50)], 1.2), 0.3)
 # slam
-def thud(g=1): t = tt(0.5); return (np.sin(2 * np.pi * np.cumsum(60 + 80 * np.exp(-t * 25)) / SR) * np.exp(-t * 8) + lp(noise(0.5), 1200) * np.exp(-t * 18) * 0.7) * g
 add(sfx, st[15] + 0.32, thud(), 0.9); add(sfx, st[15] + 0.05, whoosh(0.3, True), 0.15)
 add(sfx, st[16], riser(st[17] - st[16]), 0.18)
 # door blast

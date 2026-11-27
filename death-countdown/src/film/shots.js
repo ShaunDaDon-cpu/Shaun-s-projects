@@ -248,8 +248,16 @@ export function makeShots(X) {
   // 13 — doorbell cam
   S.push({ line: 13, update(lt, d, T) {
     light('night', [SET.house.x, 0, SET.house.z + 16]); W.porchLight.intensity = 45; hemi.intensity = 0.6;
-    C.col.forEach((c, i) => { c.place(H([-3.3, 0, 3.3][i], 0, 0).x, 0.4, H(0, 0, [17.6, 18.4, 17.6][i]).z, PI + [0.25, 0, -0.25][i]); c.screenMode = 'static'; c.headG.rotation.z = Math.sin(T * 0.8 + i) * 0.06; c.headG.rotation.x = 0.12; });
-    cam(H(0, 6.9, 12.9), H(0, 3.4, 18.5), 96);
+    // creepy head tilt: the middle Collector cranks his head sideways in stuttering steps, neck stretching, then twitches
+    const k = smooth(seg(lt, 0.35, 1.7)); const steps = Math.floor(k * 9) / 9; const jit = (L.rng(Math.floor(T * 24))() - 0.5) * 0.05 * (k > 0 && k < 1 ? 1 : 0);
+    const tw = imp(lt, 1.95, 0.35, 1); const tilt = steps * 1.4 + jit + tw * 0.35 * Math.sin(seg(lt, 1.95, 2.3) * PI);
+    C.col.forEach((c, i) => {
+      c.place(H([-3.3, 0, 3.3][i], 0, 0).x, 0.4, H(0, 0, [17.6, 18.4, 17.6][i]).z, PI + [0.25, 0, -0.25][i]); c.screenMode = 'static'; c.headG.rotation.x = 0.12;
+      if (i === 1) { c.headG.rotation.z = tilt; c.headG.position.y = 2 + 0.35 * steps; c.headG.position.x = -0.25 * steps; c.headG.rotation.y = 0.15 * steps; }
+      else { const kk = smooth(seg(lt, 0.9 + i * 0.25, 2.2)); c.headG.rotation.z = (i === 0 ? -0.45 : 0.45) * kk + Math.sin(T * 0.8 + i) * 0.03; }
+    });
+    const pk = smooth(lt / d); const hw = new THREE.Vector3(); C.col[1].root.updateMatrixWorld(true); C.col[1].face.getWorldPosition(hw);
+    cam(H(0, 6.9, 12.9), new THREE.Vector3(lerp(SET.house.x, hw.x, 0.75 * pk), lerp(5.2, 6.2, pk), SET.house.z + 18.5), lerp(96, 72, pk), { shake: tw * 0.08, T });
     UI.filter('saturate(0.3) contrast(1.3) brightness(1.15) hue-rotate(60deg)'); UI.vignette(0.9); camHUD(T, 'FRONT DOOR');
   } });
   // 14 — screens show my face
