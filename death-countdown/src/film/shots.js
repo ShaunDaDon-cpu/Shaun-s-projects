@@ -209,18 +209,27 @@ export function makeShots(X) {
     [[0, -11, -2.2, 0], [1, -6, -2.2, 0], [2, -9, 2.2, PI], [3, -10.5, 5.8, 0], [4, -6.5, 5.8, 0], [5, -5, 10.2, PI]].forEach(([k2, x, z, ry]) => { const e = C.ext[k2]; sitAt(e, CF(x, 0, z).x, 0, CF(0, 0, z).z, ry, 1.55); e.expr = lt > tGo + 0.8 ? 'worried' : 'smile'; e.headG.rotation.y = lt > tGo + 0.6 ? (k2 % 2 ? 0.6 : -0.6) : 0; e.armR.rotation.x = -0.9; });
     const e = smooth(lt / d); cam(CF(lerp(-1.5, 0.5, e), lerp(11, 10, e), lerp(18, 16.5, e)), CF(lerp(6.5, 8.2, e), 2.4, lerp(-1.5, 1.0, e)), 54);
   } });
-  // 9 — teacher skips attendance
+  // 9 — teacher skips attendance: names on the board, speech bubbles, Mason gets skipped
   S.push({ line: 9, update(lt, d, T) {
-    light('inDay', [SET.class.x, 0, 0]);
-    const t = C.teacher; t.place(CL(-6, 0, -8.5).x, 0, CL(0, 0, -8.5).z, 0.4); t.armL.rotation.x = -1.2; t.armL.rotation.z = 0.35; t.expr = 'neutral'; t.talk = Math.abs(Math.sin(T * 9)) * (Math.sin(T * 1.7) > -0.3 ? 1 : 0);
-    t.headG.rotation.y = Math.sin(T * 1.6) * 0.5;
+    light('inDay', [SET.class.x, 0, 0]); hemi.intensity = 1.9;
+    const calls = [['Ava?', 0.0], ['Ben?', 0.38], ['Cleo?', 0.72], ['Dev?', 1.12], ['Ella?', 1.6]];
+    let step = 0; calls.forEach(([, t0], k) => { if (lt >= t0 + 0.25) step = k + 1; });
+    const arrow = clamp((lt - 1.0) / 0.3); W.drawBoard(step, arrow);
+    const t = C.teacher; t.place(CL(-6.5, 0, -9.2).x, 0, CL(0, 0, -9.2).z, 0.35); t.armL.rotation.x = -1.2; t.armL.rotation.z = 0.35; t.expr = lt > 1.1 && lt < 1.6 ? 'unimpressed' : 'neutral';
+    const cur = calls.filter(([, t0]) => lt >= t0).pop(); const inCall = cur && lt - cur[1] < 0.3; t.talk = inCall ? Math.abs(Math.sin((lt - cur[1]) * 22)) : 0;
+    t.headG.rotation.y = 0.2 + Math.sin(T * 1.6) * 0.15;
     C.clip.visible = true; C.clip.position.copy(t.handWorld('L')).add(new THREE.Vector3(0.1, 0.4, 0.4)); C.clip.rotation.set(-0.8, 0.4, 0);
-    let k = 0; for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) {
-      const x = -9 + c * 6, z = -3 + r * 5 + 1.4; if (c === 1 && r === 1) continue; if (k > 9) continue;
-      const e = C.ext[k++]; sitAt(e, CL(x, 0, z).x, 0, CL(0, 0, z).z, PI, 0.1 + 1.45); e.expr = 'neutral';
+    const pool = [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12]; let k = 0; for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) {
+      const x = -9 + c * 6, z = -3 + r * 5 + 1.75; if (c === 1 && r === 0) continue; if (k > 10) continue;
+      const e = C.ext[pool[k++]]; sitAt(e, CL(x, 0, z).x, 0, CL(0, 0, z).z, PI, 1.625); e.expr = 'neutral'; e.armL.rotation.x = e.armR.rotation.x = -1.3; e.armL.rotation.z = 0.15; e.armR.rotation.z = -0.15;
     }
-    const h = C.hero; sitAt(h, CL(-3, 0, 3.4).x, 0, CL(0, 0, 3.4).z, PI, 1.55); h.expr = lt > 0.6 ? 'sad' : 'neutral'; h.armR.rotation.z = lt > 0.3 ? 2.9 + Math.sin(T * 10) * 0.12 : 0;
-    const e = smooth(lt / d); cam(CL(lerp(13, 12, e), 7.5, lerp(7, 6, e)), CL(-4, 3.2, -2.5), 50);
+    const h = C.hero; sitAt(h, CL(-3, 0, -1.25).x, 0, CL(0, 0, -1.25).z, PI, 1.625); const up = smooth(seg(lt, 1.15, 1.4));
+    h.expr = lt > 1.2 ? 'sad' : 'neutral'; h.armR.rotation.z = up * (2.9 + Math.sin(T * 10) * 0.15); h.armL.rotation.x = -1.3; h.armR.rotation.x = -1.3 * (1 - up); h.headG.rotation.y = lt > 1.3 ? 0.35 : 0;
+    const e = smooth(lt / d); cam(CL(lerp(-0.2, -0.8, e), lerp(9.6, 9.2, e), lerp(13, 12, e)), CL(-0.6, 5.6, -9), 62);
+    if (cur && lt - cur[1] < 0.36) { const hp = t.headWorld().add(new THREE.Vector3(0.6, 1.6, 0)); const sp = toScreen(hp); const k2 = clamp((lt - cur[1]) / 0.08);
+      UI.add(`<div style="position:relative;background:#fff;color:#111;border:6px solid #111;border-radius:40px;padding:10px 34px;font-family:Fredoka;font-weight:700;font-size:64px;white-space:nowrap">${cur[0]}<div style="position:absolute;left:30px;bottom:-30px;width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:30px solid #111"></div></div>`, `left:${sp.x}px;top:${sp.y}px;transform:translate(-30%,-100%) scale(${0.6 + 0.4 * k2})`, ''); }
+    // label the hero so you can see who's being skipped
+    const hs = toScreen(h.headWorld().add(new THREE.Vector3(0, 1.5, 0))); UI.add('▼ MASON', `left:${hs.x}px;top:${hs.y}px;transform:translate(-50%,-100%);font-size:44px;color:#ffe14d;letter-spacing:4px;-webkit-text-stroke:8px #000;paint-order:stroke fill`, 'mono');
   } });
   // 10 — mom checks pulse
   S.push({ line: 10, update(lt, d, T) {

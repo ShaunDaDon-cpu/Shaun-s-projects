@@ -208,14 +208,49 @@ export function buildWorld(scene) {
   // ---------- CLASSROOM ----------
   const cls = new THREE.Group(); cls.position.copy(SET.class); scene.add(cls);
   room(cls, 32, 26, 9, '#e9f7ef', '#a8e6cf', '#fff3bf');
-  const board = new THREE.Mesh(new THREE.PlaneGeometry(14, 5.5), new THREE.MeshLambertMaterial({ map: textTex(1024, 400, (c, w, h) => {
-    c.fillStyle = '#1f5137'; c.fillRect(0, 0, w, h); c.fillStyle = '#f1f3f5'; c.font = '700 64px Fredoka'; c.fillText('ATTENDANCE', 40, 80);
-    c.font = '600 42px Fredoka'; ['Ava ✓', 'Ben ✓', 'Cleo ✓', 'Dev ✓', 'Ella ✓'].forEach((n, i) => c.fillText(n, 60 + (i > 2 ? 420 : 0), 150 + (i % 3) * 70));
-    c.fillStyle = 'rgba(241,243,245,0.5)'; c.fillText('Mason ...', 480, 290);
-  }) }));
-  board.position.set(0, 4.8, -12.9); cls.add(board); cls.add(box(14.6, 6.1, 0.2, '#8a5a35', 0, 4.8, -13.05));
+  W.boardCanvas = document.createElement('canvas'); W.boardCanvas.width = 1024; W.boardCanvas.height = 400; W.boardTex = new THREE.CanvasTexture(W.boardCanvas); W.boardTex.colorSpace = THREE.SRGBColorSpace; W.boardTex.anisotropy = 8;
+  W.drawBoard = (step, arrow) => { const key = step + '|' + Math.round(arrow * 20); if (W.boardKey === key) return; W.boardKey = key; const c = W.boardCanvas.getContext('2d'), w = 1024, h = 400;
+    c.fillStyle = '#1f5137'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,0.05)'; for (let k = 0; k < 40; k++) c.fillRect((k * 173) % w, (k * 97) % h, 60, 6);
+    c.fillStyle = '#f1f3f5'; c.font = '700 64px Fredoka'; c.textAlign = 'center'; c.fillText('ATTENDANCE', 640, 70); c.fillRect(640 - 210, 82, 420, 5);
+    const names = [['Ava', 330, 160], ['Ben', 330, 250], ['Cleo', 330, 340], ['Mason', 680, 160], ['Dev', 680, 250], ['Ella', 680, 340]]; const order = [0, 1, 2, 4, 5];
+    c.textAlign = 'left'; c.font = '700 72px Fredoka';
+    names.forEach(([n, x, y], i) => { c.fillStyle = i === 3 ? '#ffec99' : '#f1f3f5'; c.fillText(n, x, y); });
+    order.forEach((ni, k) => { if (k < step) { const [, x, y] = names[ni]; c.strokeStyle = '#8ce99a'; c.lineWidth = 11; c.lineCap = 'round'; c.beginPath(); c.moveTo(x + 200, y - 30); c.lineTo(x + 222, y - 5); c.lineTo(x + 262, y - 60); c.stroke(); } });
+    if (arrow > 0) { c.strokeStyle = '#ff8787'; c.lineWidth = 9; c.lineCap = 'round'; c.setLineDash([18, 14]); c.beginPath(); const sx = 500, sy = 318, ex = 670, ey = 228; const n = Math.max(2, Math.floor(arrow * 40));
+      for (let q = 0; q <= n; q++) { const t = q / 40; const x = (1 - t) * (1 - t) * sx + 2 * (1 - t) * t * 640 + t * t * ex, y = (1 - t) * (1 - t) * sy + 2 * (1 - t) * t * 20 + t * t * ey; q ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); c.setLineDash([]);
+      if (arrow >= 1) { c.fillStyle = '#ff8787'; c.beginPath(); c.moveTo(ex + 10, ey + 6); c.lineTo(ex - 22, ey - 22); c.lineTo(ex - 26, ey + 16); c.fill(); c.font = '700 40px Fredoka'; c.textAlign = 'left'; c.fillText('skipped?', 545, 122); } }
+    W.boardTex.needsUpdate = true; };
+  W.drawBoard(0, 0);
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(14, 5.5), new THREE.MeshLambertMaterial({ map: W.boardTex }));
+  board.position.set(0, 4.8, -12.6); cls.add(board); cls.add(box(14.6, 6.1, 0.15, '#8a5a35', 0, 4.8, -12.72));
   cls.add(box(5, 2.4, 2.2, '#8a5a35', -7, 1.2, -9));
-  W.desks = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) { const d = new THREE.Group(); d.add(box(2.6, 0.25, 1.8, '#ffd8a8', 0, 2.4, 0), box(0.2, 2.3, 0.2, '#868e96', 0, 1.15, 0)); d.position.set(-9 + c * 6, 0, -3 + r * 5); cls.add(d); W.desks.push(d); }
+  W.desks = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) { const d = new THREE.Group();
+    d.add(box(2.8, 0.25, 1.9, '#ffd8a8', 0, 2.45, 0), box(2.6, 1.0, 1.7, '#e9b97a', 0, 1.85, 0.0), box(0.18, 2.3, 0.18, '#868e96', -1.2, 1.15, -0.8), box(0.18, 2.3, 0.18, '#868e96', 1.2, 1.15, -0.8));
+    d.add(box(0.9, 0.12, 1.2, ['#ff6b6b', '#4dabf7', '#ffd43b', '#69db7c'][(r + c) % 4], -0.5, 2.62, 0.1), box(0.08, 0.08, 1.0, '#ffd43b', 0.6, 2.62, 0.1));
+    const ch = new THREE.Group(); ch.add(box(2.0, 0.25, 1.7, '#4dabf7', 0, 1.5, 0), box(2.0, 2.2, 0.25, '#4dabf7', 0, 2.7, 0.85), box(0.15, 1.5, 0.15, '#495057', -0.85, 0.75, -0.7), box(0.15, 1.5, 0.15, '#495057', 0.85, 0.75, -0.7), box(0.15, 1.5, 0.15, '#495057', -0.85, 0.75, 0.7), box(0.15, 1.5, 0.15, '#495057', 0.85, 0.75, 0.7));
+    ch.position.set(0, 0, 1.75); d.add(ch); d.position.set(-9 + c * 6, 0, -3 + r * 5); cls.add(d); W.desks.push(d); }
+  // classroom dressing
+  { cls.add(box(32, 7, 0.4, '#e9f7ef', 0, 12.5, -13), box(0.4, 7, 26, '#a8e6cf', -16, 12.5, 0), box(0.4, 7, 26, '#a8e6cf', 16, 12.5, 0));
+    const ban = new THREE.Mesh(new THREE.PlaneGeometry(14.5, 1.9), new THREE.MeshLambertMaterial({ map: textTex(1280, 166, (c, w, h) => { c.fillStyle = '#ffd43b'; c.fillRect(0, 0, w, h); c.strokeStyle = '#f08c00'; c.lineWidth = 14; c.strokeRect(7, 7, w - 14, h - 14);
+      const t = 'WELCOME TO 5TH GRADE!'; c.font = '700 104px Fredoka'; c.textAlign = 'center'; let x = w / 2 - c.measureText(t).width / 2; c.textAlign = 'left'; for (const ch of t) { c.fillStyle = ['#e03131', '#1c7ed6', '#2f9e44', '#7048e8', '#e8590c'][(x | 0) % 5]; c.fillText(ch, x, 122); x += c.measureText(ch).width; } }) }));
+    ban.position.set(0, 11.2, -12.75); cls.add(ban);
+    for (let k = 0; k < 26; k++) { const tri = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.0, 3), mat(['#ff6b6b', '#ffd43b', '#4dabf7', '#69db7c', '#b197fc'][k % 5])); tri.rotation.x = Math.PI; const x = -15 + k * 1.2; tri.position.set(x, 14.0 - 0.6 * Math.sin((k / 25) * Math.PI), -12.6); cls.add(tri); }
+    const poster = (w, h, x, y, z, ry, draw) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: textTex(Math.round(w * 64), Math.round(h * 64), draw) })); m.position.set(x, y, z); m.rotation.y = ry; cls.add(m); };
+    const t2 = (c, w, t, y, col, size) => { c.fillStyle = col; c.font = `700 ${size}px Fredoka`; c.textAlign = 'center'; c.fillText(t, w / 2, y); };
+    poster(30, 1.1, 0, 8.3, -12.75, 0, (c, w, h) => { c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); const L = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz'; for (let i = 0; i < 26; i++) { c.fillStyle = ['#e03131', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8'][i % 5]; c.font = '700 44px Fredoka'; c.textAlign = 'center'; c.fillText(L.substr(i * 2, 2), (i + 0.5) * w / 26, 54); } });
+    poster(4.2, 5, 10.8, 4.8, -12.75, 0, (c, w, h) => { c.fillStyle = '#e7f5ff'; c.fillRect(0, 0, w, h); t2(c, w, 'MATH', 64, '#1864ab', 50); t2(c, w, 'IS FUN!', 116, '#1864ab', 46); c.font = '700 54px Fredoka'; ['2+2=4', '5×3=15', '9−4=5'].forEach((q, i) => { c.fillStyle = ['#e03131', '#2f9e44', '#f08c00'][i]; c.fillText(q, w / 2, 180 + i * 50); }); });
+    poster(4.2, 5, -10.8, 4.8, -12.75, 0, (c, w, h) => { c.fillStyle = '#0b1640'; c.fillRect(0, 0, w, h); t2(c, w, 'SOLAR SYSTEM', 50, '#ffd43b', 30); const cols = ['#ffd43b', '#adb5bd', '#ffa94d', '#4dabf7', '#ff6b6b', '#e599f7', '#ffe066', '#99e9f2']; cols.forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.arc(40 + i * 28, 170 + Math.sin(i) * 40, i ? 8 + (i % 4) * 3 : 26, 0, 7); c.fill(); }); });
+    poster(5, 3.6, -15.75, 5.2, -4, Math.PI / 2, (c, w, h) => { c.fillStyle = '#74c0fc'; c.fillRect(0, 0, w, h); c.fillStyle = '#69db7c'; [[60, 60, 70, 50], [150, 50, 60, 70], [230, 120, 50, 40], [90, 150, 40, 60]].forEach(([x, y, a, b]) => { c.beginPath(); c.ellipse(x, y, a / 2, b / 2, 0.3, 0, 7); c.fill(); }); t2(c, w, 'WORLD MAP', 220, '#fff', 30); });
+    poster(4, 4.6, -15.75, 5.2, 4, Math.PI / 2, (c, w, h) => { c.fillStyle = '#fff3bf'; c.fillRect(0, 0, w, h); t2(c, w, 'READING', 70, '#e8590c', 40); t2(c, w, 'IS A', 115, '#e8590c', 36); t2(c, w, 'SUPERPOWER!', 160, '#e8590c', 30); c.fillStyle = '#7048e8'; c.fillRect(w / 2 - 50, 190, 100, 60); c.fillStyle = '#fff'; c.fillRect(w / 2 - 3, 190, 6, 60); });
+    [-6, 6].forEach((z) => { const wd = new THREE.Mesh(new THREE.PlaneGeometry(5, 3.8), basic('#bfe6ff')); wd.position.set(15.75, 5.2, z); wd.rotation.y = -Math.PI / 2; cls.add(wd); cls.add(box(0.3, 0.3, 5.4, '#fff', 15.7, 3.2, z), box(0.3, 3.9, 0.25, '#fff', 15.7, 5.2, z)); });
+    const ck = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.2, 24), new THREE.MeshLambertMaterial({ map: textTex(128, 128, (c) => { c.fillStyle = '#fff'; c.fillRect(0, 0, 128, 128); c.strokeStyle = '#212529'; c.lineWidth = 8; c.beginPath(); c.arc(64, 64, 58, 0, 7); c.stroke(); c.lineWidth = 6; c.beginPath(); c.moveTo(64, 64); c.lineTo(64, 26); c.moveTo(64, 64); c.lineTo(86, 80); c.stroke(); }) }));
+    ck.rotation.x = Math.PI / 2; ck.position.set(9.6, 8.1 - 0.6, -12.7); cls.add(ck);
+    const ap = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), mat('#e03131')); ap.position.set(-8.2, 2.85, -9); cls.add(ap); cls.add(box(0.08, 0.3, 0.08, '#5c3d2e', -8.2, 3.35, -9));
+    const gb = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), mat('#4dabf7')); gb.position.set(-5.4, 3.45, -9.3); cls.add(gb); cls.add(box(0.5, 0.3, 0.5, '#5c3d2e', -5.4, 2.55, -9.3));
+    cls.add(box(1.4, 0.4, 1.0, '#7048e8', -6.8, 2.6, -8.8), box(1.3, 0.35, 0.95, '#ffd43b', -6.8, 2.95, -8.8));
+    cls.add(box(5, 6, 1.6, '#a9744f', 12.8, 3, -11.6)); for (let r = 0; r < 4; r++) { cls.add(box(4.6, 0.2, 1.5, '#8a5a35', 12.8, 0.8 + r * 1.5, -11.5)); for (let b = 0; b < 8; b++) cls.add(box(0.45, 1.0 + (b % 3) * 0.12, 1.1, ['#e03131', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8'][(b + r) % 5], 10.9 + b * 0.52, 1.4 + r * 1.5, -11.45)); }
+    cls.add(box(14, 0.25, 0.5, '#8a5a35', 0, 1.95, -12.45), box(1.0, 0.15, 0.2, '#fff', -4, 2.15, -12.4), box(1.0, 0.25, 0.4, '#343a40', 3, 2.2, -12.4));
+  }
 
   // ---------- HOUSE INTERIOR ----------
   const H = new THREE.Group(); H.position.copy(SET.house); scene.add(H); W.houseG = H;
