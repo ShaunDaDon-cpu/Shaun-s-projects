@@ -189,7 +189,7 @@ export function makeShots(X) {
       const P = W.smoke, at = P.geometry.attributes.position, r = L.rng(19); P.visible = true; P.material.opacity = 0.55; P.material.size = 3.2;
       for (let i = 0; i < P.n; i++) { const ph = ((T * 0.22) + i / P.n) % 1; at.setXYZ(i, SET.bus.x + 5 + (r() - 0.5) * 1.5 + ph * 5 + Math.sin(ph * 6 + i) * 0.8, 2 + ph * 16, SET.bus.z + 5 + (r() - 0.5) * 1.5 - ph * 3); }
       at.needsUpdate = true; }
-    UI.filter('grayscale(0.72) contrast(1.15) brightness(1.25)'); UI.vignette(0.95);
+    UI.filter('grayscale(0.5) contrast(1.12) brightness(1.2)'); UI.vignette(0.95);
     UI.add('3 YEARS AGO', 'left:50%;top:200px;transform:translateX(-50%);font-size:64px;letter-spacing:10px;opacity:0.9');
   } });
   // 8 — cafeteria tray

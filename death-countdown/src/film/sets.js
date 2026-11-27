@@ -103,7 +103,7 @@ export function buildWorld(scene) {
   // ---------- BUS CRASH ----------
   const bus = new THREE.Group(); bus.position.copy(SET.bus); scene.add(bus);
   const br = new THREE.Mesh(new THREE.PlaneGeometry(14, 160), mat('#5a5e6b')); br.rotation.x = -Math.PI / 2; br.position.y = 0.02; br.receiveShadow = true; bus.add(br);
-  const bg = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), mat('#2e5a3a')); bg.rotation.x = -Math.PI / 2; bus.add(bg);
+  const bg = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), mat('#3f9a4f')); bg.rotation.x = -Math.PI / 2; bg.position.y = 0.012; bg.receiveShadow = true; bus.add(bg);
   // wrecked bus (local +z = front): crushed nose, shattered windows, dents, hanging door, missing wheel
   const bb = new THREE.Group(); const Y = '#ffc61a', Yd = '#d9a40f';
   bb.add(box(4.4, 4.2, 10.5, Y, 0, 2.6, -1.6, 0.3));
