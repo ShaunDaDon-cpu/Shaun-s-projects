@@ -165,6 +165,46 @@ export function buildWorld(scene) {
   W.cafeTables = [];
   [[-8, 0], [6, 0], [-8, 8], [6, 8]].forEach(([x, z]) => { const t = new THREE.Group(); t.add(box(10, 0.4, 3, '#f8f9fa', 0, 2.5, 0), box(0.4, 2.4, 0.4, '#868e96', -4, 1.2, 0), box(0.4, 2.4, 0.4, '#868e96', 4, 1.2, 0), box(10, 0.3, 1, '#4dabf7', 0, 1.4, -2.2), box(10, 0.3, 1, '#4dabf7', 0, 1.4, 2.2)); t.position.set(x, 0, z); cafe.add(t); W.cafeTables.push(t); });
   W.tray = tray(); cafe.add(W.tray);
+  // --- cafeteria dressing ---
+  { const fl = textTex(512, 512, (c, w, h) => { for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { c.fillStyle = (x + y) % 2 ? '#e9f2ff' : '#7fb2e5'; c.fillRect(x * 64, y * 64, 64, 64); } });
+    fl.wrapS = fl.wrapT = THREE.RepeatWrapping; fl.repeat.set(4.5, 3.5); const fm = new THREE.Mesh(new THREE.PlaneGeometry(36, 28), new THREE.MeshLambertMaterial({ map: fl })); fm.rotation.x = -Math.PI / 2; fm.position.y = 0.012; fm.receiveShadow = true; cafe.add(fm);
+    const poster = (w, h, x, y, z, ry, draw) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: textTex(Math.round(w * 64), Math.round(h * 64), draw) })); m.position.set(x, y, z); m.rotation.y = ry; cafe.add(m); };
+    const title = (c, w, t, y, col, size) => { c.fillStyle = col; c.font = `700 ${size}px Fredoka`; c.textAlign = 'center'; c.fillText(t, w / 2, y); };
+    poster(4.4, 5.6, 7.5, 5.2, -13.75, 0, (c, w, h) => { c.fillStyle = '#fff3bf'; c.fillRect(0, 0, w, h); c.strokeStyle = '#f08c00'; c.lineWidth = 14; c.strokeRect(7, 7, w - 14, h - 14); title(c, w, 'EAT YOUR', 60, '#2b8a3e', 40); title(c, w, 'VEGGIES!', 104, '#2b8a3e', 46);
+      c.fillStyle = '#ff922b'; c.beginPath(); c.moveTo(w / 2 - 40, 150); c.lineTo(w / 2 + 40, 150); c.lineTo(w / 2, 320); c.fill(); c.fillStyle = '#40c057'; c.fillRect(w / 2 - 30, 120, 18, 34); c.fillRect(w / 2 - 6, 110, 14, 44); c.fillRect(w / 2 + 14, 122, 16, 32);
+      c.fillStyle = '#212529'; c.beginPath(); c.arc(w / 2 - 14, 200, 6, 0, 7); c.arc(w / 2 + 14, 200, 6, 0, 7); c.fill(); c.lineWidth = 5; c.strokeStyle = '#212529'; c.beginPath(); c.arc(w / 2, 222, 14, 0.2, 2.9); c.stroke(); });
+    poster(4.0, 5.0, 13.2, 5.0, -13.75, 0, (c, w, h) => { c.fillStyle = '#d0ebff'; c.fillRect(0, 0, w, h); title(c, w, 'GOT', 70, '#1864ab', 54); title(c, w, 'MILK?', 125, '#1864ab', 54);
+      c.fillStyle = '#fff'; c.fillRect(w / 2 - 45, 160, 90, 130); c.fillStyle = '#4dabf7'; c.fillRect(w / 2 - 45, 200, 90, 40); c.beginPath(); c.moveTo(w / 2 - 45, 160); c.lineTo(w / 2, 125); c.lineTo(w / 2 + 45, 160); c.fill(); });
+    poster(6.4, 4.4, -13.5, 5.6, -13.75, 0, (c, w, h) => { c.fillStyle = '#212529'; c.fillRect(0, 0, w, h); c.strokeStyle = '#c08457'; c.lineWidth = 16; c.strokeRect(8, 8, w - 16, h - 16); title(c, w, 'LUNCH MENU', 62, '#ffd43b', 46);
+      c.font = '600 30px Fredoka'; c.textAlign = 'left'; c.fillStyle = '#f1f3f5'; ['MON  Tacos', 'TUE  Spaghetti', 'WED  Pizza  ★', 'THU  Chicken Nuggets', 'FRI  Mystery Meat'].forEach((t, i) => c.fillText(t, 40, 112 + i * 34)); });
+    poster(8, 1.6, -4, 8.2, -13.75, 0, (c, w, h) => { c.fillStyle = '#7048e8'; c.beginPath(); c.moveTo(0, 0); c.lineTo(w, 0); c.lineTo(w - 40, h / 2); c.lineTo(w, h); c.lineTo(0, h); c.lineTo(40, h / 2); c.fill(); title(c, w, 'GO TIGERS!', 70, '#ffd43b', 62); });
+    poster(4.2, 5.2, -17.75, 5.2, 6, Math.PI / 2, (c, w, h) => { c.fillStyle = '#e6fcf5'; c.fillRect(0, 0, w, h); title(c, w, 'WASH', 70, '#0ca678', 56); title(c, w, 'YOUR', 125, '#0ca678', 56); title(c, w, 'HANDS!', 180, '#0ca678', 56);
+      c.fillStyle = '#74c0fc'; for (let i = 0; i < 8; i++) { c.beginPath(); c.arc(60 + (i * 37) % (w - 100), 230 + (i % 3) * 30, 12, 0, 7); c.fill(); } });
+    poster(4.2, 4.4, -17.75, 5.2, -4, Math.PI / 2, (c, w, h) => { c.fillStyle = '#fff5f5'; c.fillRect(0, 0, w, h); c.strokeStyle = '#e03131'; c.lineWidth = 14; c.strokeRect(7, 7, w - 14, h - 14); title(c, w, 'NO', 80, '#e03131', 60); title(c, w, 'RUNNING!', 150, '#e03131', 50); title(c, w, '🏃', 230, '#e03131', 60); });
+    poster(3.6, 4.4, 17.75, 5.4, -4, -Math.PI / 2, (c, w, h) => { c.fillStyle = '#fff9db'; c.fillRect(0, 0, w, h); title(c, w, 'SCIENCE', 70, '#5f3dc4', 40); title(c, w, 'FAIR', 115, '#5f3dc4', 44); title(c, w, 'FRIDAY!', 160, '#e8590c', 40); c.fillStyle = '#5f3dc4'; c.beginPath(); c.arc(w / 2, 215, 26, 0, 7); c.fill(); });
+    // clock
+    const ck = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.2, 24), new THREE.MeshLambertMaterial({ map: textTex(128, 128, (c) => { c.fillStyle = '#fff'; c.fillRect(0, 0, 128, 128); c.strokeStyle = '#212529'; c.lineWidth = 8; c.beginPath(); c.arc(64, 64, 58, 0, 7); c.stroke(); c.lineWidth = 6; c.beginPath(); c.moveTo(64, 64); c.lineTo(64, 24); c.moveTo(64, 64); c.lineTo(92, 70); c.stroke(); }) }));
+    ck.rotation.x = Math.PI / 2; ck.position.set(2, 7.6, -13.7); cafe.add(ck);
+    // exit doors on right wall
+    cafe.add(box(0.3, 6.2, 6.2, '#495057', 17.8, 3.1, 8)); cafe.add(box(0.35, 5.6, 2.7, '#a5d8ff', 17.7, 2.9, 6.6)); cafe.add(box(0.35, 5.6, 2.7, '#a5d8ff', 17.7, 2.9, 9.4));
+    const ex = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.9), new THREE.MeshBasicMaterial({ map: textTex(160, 60, (c, w, h) => { c.fillStyle = '#2b8a3e'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.font = '700 44px Fredoka'; c.textAlign = 'center'; c.fillText('EXIT', w / 2, 46); }) })); ex.position.set(17.6, 6.9, 8); ex.rotation.y = -Math.PI / 2; cafe.add(ex);
+    // windows on left wall
+    [10, -10].forEach((z) => { const wd = new THREE.Mesh(new THREE.PlaneGeometry(5, 3.6), basic('#bfe6ff')); wd.position.set(-17.75, 5.4, z); wd.rotation.y = Math.PI / 2; cafe.add(wd); cafe.add(box(0.3, 0.3, 5.4, '#fff', -17.7, 3.5, z), box(0.3, 3.8, 0.25, '#fff', -17.7, 5.4, z)); });
+    // vending machine, milk cooler, trash + recycling, tray stack, sneeze guard
+    cafe.add(box(3, 6.5, 2, '#e03131', 15.4, 3.25, -11.8, 0.15), box(2.2, 4.2, 0.1, '#1c1f2b', 15.1, 4.0, -10.75));
+    for (let r = 0; r < 4; r++) for (let q = 0; q < 3; q++) cafe.add(box(0.5, 0.7, 0.08, ['#ffd43b', '#69db7c', '#4dabf7', '#ff922b'][r], 14.5 + q * 0.6, 5.4 - r * 0.95, -10.7));
+    cafe.add(box(3.4, 3.2, 2, '#f8f9fa', 9.5, 1.6, -12.4, 0.1), box(3, 1.8, 0.08, '#d0ebff', 9.5, 2.0, -11.38)); for (let q = 0; q < 5; q++) cafe.add(box(0.45, 0.7, 0.45, q % 2 ? '#ffd43b' : '#ffffff', 8.4 + q * 0.55, 1.5, -11.6, 0.08));
+    const bin = (x, z, col, lid) => { const b = cyl(0.9, 0.75, 2.6, col, 14); b.position.set(x, 1.3, z); cafe.add(b); const l = cyl(0.95, 0.95, 0.2, lid, 14); l.position.set(x, 2.65, z); cafe.add(l); };
+    bin(16.2, 2.2, '#495057', '#343a40'); bin(16.2, 4.4, '#1c7ed6', '#1864ab');
+    for (let q = 0; q < 8; q++) cafe.add(box(2.4, 0.15, 1.6, '#ff922b', 5.3, 2.9 + q * 0.17, -9.5, 0.05));
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(16, 0.1, 1.4), new THREE.MeshLambertMaterial({ color: '#d0ebff', transparent: true, opacity: 0.45 })); glass.position.set(-4, 4.6, -9.2); cafe.add(glass);
+    cafe.add(box(0.15, 1.8, 0.15, '#adb5bd', -11.5, 3.7, -8.6), box(0.15, 1.8, 0.15, '#adb5bd', 3.5, 3.7, -8.6));
+    // pendant lights
+    for (let x = -10; x <= 10; x += 10) for (let z = -6; z <= -6; z += 12) { cafe.add(box(0.1, 2.5, 0.1, '#495057', x, 8.4, z)); const sh = cyl(0.3, 1.2, 0.8, '#ffd43b', 16); sh.position.set(x, 6.9, z); cafe.add(sh); const bl = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), basic('#fff9db')); bl.position.set(x, 6.5, z); cafe.add(bl); }
+    // table props: napkin dispensers, ketchup + mustard, trays at seats
+    [[-8, 0], [6, 0], [-8, 8], [6, 8]].forEach(([x, z]) => { cafe.add(box(0.7, 0.8, 0.5, '#adb5bd', x - 1.5, 3.1, z, 0.08)); cafe.add(box(0.3, 0.8, 0.3, '#e03131', x - 0.6, 3.1, z, 0.1)); cafe.add(box(0.3, 0.8, 0.3, '#fab005', x - 0.1, 3.1, z, 0.1)); });
+    [[-11, -0.9], [-6, -0.9], [-9, 0.9], [-10.5, 7.1], [-6.5, 7.1], [-5, 8.9]].forEach(([x, z]) => { const t = tray(); t.scale.setScalar(0.85); t.position.set(x, 2.78, z); cafe.add(t); });
+  }
   // ---------- CLASSROOM ----------
   const cls = new THREE.Group(); cls.position.copy(SET.class); scene.add(cls);
   room(cls, 32, 26, 9, '#e9f7ef', '#a8e6cf', '#fff3bf');

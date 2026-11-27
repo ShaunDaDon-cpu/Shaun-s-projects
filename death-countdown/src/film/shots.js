@@ -192,15 +192,22 @@ export function makeShots(X) {
     UI.filter('grayscale(0.5) contrast(1.12) brightness(1.2)'); UI.vignette(0.95);
     UI.add('3 YEARS AGO', 'left:50%;top:200px;transform:translateX(-50%);font-size:64px;letter-spacing:10px;opacity:0.9');
   } });
-  // 8 — cafeteria tray
+  // 8 — cafeteria tray: lunch lady carries the plate over, sets it down, walks away; then the hero walks in
   S.push({ line: 8, update(lt, d, T) {
-    light('inDay', [SET.cafe.x + 4, 0, 2]);
-    const ll = C.lunch; const k = seg(lt, 0, 0.8); ll.place(CF(lerp(11.3, 11.3, k), 0, 0).x + (lt > 1.1 ? (lt - 1.1) * 1.5 : 0), 0, 0, -PI / 2); ll.expr = lt < 1.2 ? 'smile' : 'worried';
-    ll.armL.rotation.x = ll.armR.rotation.x = lt < 1.0 ? -1.0 : -0.2; ll.upper.rotation.x = lt < 1.0 ? 0.3 : 0;
-    W.tray.position.copy(CF(lerp(9.8, 8.2, smooth(k)), lerp(3.6, 2.8, smooth(k)), 0.4));
-    const h = C.hero; const wk = seg(lt, 0.7, 2.0); h.place(CF(lerp(-1, 4.3, wk), 0, lerp(12, 5.2, wk)).x, 0, CF(0, 0, lerp(12, 5.2, wk)).z, lerp(2.6, 2.3, wk)); if (wk < 1) h.walk(T * 7, 0.6); h.expr = wk < 1 ? 'neutral' : 'worried'; h.headG.rotation.y = wk >= 1 ? 0.3 : 0;
-    [[0, -11, -2.2, 0], [1, -6, -2.2, 0], [2, -9, 2.2, PI], [3, 3.5, 10.2, PI], [4, 8, 5.8, 0], [5, -5, 10.2, PI]].forEach(([k2, x, z, ry]) => { const e = C.ext[k2]; sitAt(e, CF(x, 0, z).x, 0, CF(0, 0, z).z, ry, 1.55); e.expr = 'neutral'; e.headG.rotation.y = lt > 1.4 ? (k2 % 2 ? 0.6 : -0.6) : 0; });
-    const e = smooth(lt / d); cam(CF(lerp(9, 8, e), lerp(9, 8.2, e), lerp(19, 17, e)), CF(9.5, 2.4, 0.5), 50);
+    light('inDay', [SET.cafe.x + 4, 0, 2]); hemi.intensity = 1.9;
+    const ll = C.lunch; const tSet = 0.95, tGo = 1.3;
+    if (lt < tSet) { const k = seg(lt, 0, tSet - 0.12); ll.place(CF(lerp(3.2, 6.6, k), 0, 0).x, 0, CF(0, 0, lerp(-6.4, -3.3, k)).z, 0.75); if (k < 1) ll.walk(T * 7, 0.45); ll.armL.rotation.x = ll.armR.rotation.x = -1.25; ll.armL.rotation.z = 0.3; ll.armR.rotation.z = -0.3; ll.expr = 'smile'; }
+    else if (lt < tGo) { ll.place(CF(6.6, 0, 0).x, 0, CF(0, 0, -3.3).z, 0.0); const b = Math.sin(seg(lt, tSet, tGo) * PI); ll.upper.rotation.x = 0.35 * b; ll.armL.rotation.x = ll.armR.rotation.x = -1.1 - 0.2 * b; ll.armL.rotation.z = 0.3; ll.armR.rotation.z = -0.3; ll.expr = 'smile'; }
+    else { const k = seg(lt, tGo + 0.2, d + 0.3); const ry = lerp(0, PI + 0.6, smooth(seg(lt, tGo, tGo + 0.3))); ll.place(CF(lerp(6.6, 2.4, k), 0, 0).x, 0, CF(0, 0, lerp(-3.3, -8.6, k)).z, ry); if (lt > tGo + 0.2) ll.walk(T * 7, 0.45); ll.expr = 'worried'; ll.headG.rotation.y = lt > tGo + 0.6 ? 1.1 * smooth(seg(lt, tGo + 0.6, tGo + 1.0)) : 0; }
+    // the plate: in her hands, then on the table
+    if (lt < tSet + 0.18) { const hp = ll.handWorld('L').lerp(ll.handWorld('R'), 0.5); W.tray.position.copy(hp).add(new THREE.Vector3(0, 0.15, 0)).sub(SET.cafe); W.tray.rotation.set(0, ll.root.rotation.y, 0); }
+    else { W.tray.position.copy(CF(6.6, 2.78, -0.9)).sub(SET.cafe); W.tray.rotation.set(0, 0, 0); }
+    W.tray.scale.setScalar(1.25);
+    const h = C.hero; const wk = seg(lt, tGo + 0.1, d - 0.45);
+    h.place(CF(lerp(16.5, 8.4, wk), 0, 0).x, 0, CF(0, 0, lerp(8, 3.4, wk)).z, -2.2 + 0.4 * wk); if (wk < 1) h.walk(T * 7, 0.6); h.expr = wk < 0.95 ? 'neutral' : 'worried'; h.headG.rotation.y = wk >= 1 ? -0.3 : 0; h.headG.rotation.x = wk >= 1 ? 0.25 : 0;
+    if (lt < tGo + 0.05) h.root.visible = false;
+    [[0, -11, -2.2, 0], [1, -6, -2.2, 0], [2, -9, 2.2, PI], [3, -10.5, 5.8, 0], [4, -6.5, 5.8, 0], [5, -5, 10.2, PI]].forEach(([k2, x, z, ry]) => { const e = C.ext[k2]; sitAt(e, CF(x, 0, z).x, 0, CF(0, 0, z).z, ry, 1.55); e.expr = lt > tGo + 0.8 ? 'worried' : 'smile'; e.headG.rotation.y = lt > tGo + 0.6 ? (k2 % 2 ? 0.6 : -0.6) : 0; e.armR.rotation.x = -0.9; });
+    const e = smooth(lt / d); cam(CF(lerp(-1.5, 0.5, e), lerp(11, 10, e), lerp(18, 16.5, e)), CF(lerp(6.5, 8.2, e), 2.4, lerp(-1.5, 1.0, e)), 54);
   } });
   // 9 — teacher skips attendance
   S.push({ line: 9, update(lt, d, T) {
