@@ -254,7 +254,7 @@ export function buildWorld(scene) {
 
   // ---------- HOUSE INTERIOR ----------
   const H = new THREE.Group(); H.position.copy(SET.house); scene.add(H); W.houseG = H;
-  const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 24), mat('#c08457')); fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; H.add(fl);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(30, 24), mat('#c08457')); fl.rotation.x = -Math.PI / 2; fl.position.y = 0.012; fl.receiveShadow = true; H.add(fl);
   const rug = new THREE.Mesh(new THREE.PlaneGeometry(10, 7), mat('#d94f70')); rug.rotation.x = -Math.PI / 2; rug.position.set(-4, 0.03, 4); H.add(rug);
   H.add(box(30, 10, 0.4, '#9fd3ff', 0, 5, -12)); H.add(box(0.4, 10, 24, '#ffd6a5', -15, 5, 0)); H.add(box(0.4, 10, 24, '#ffd6a5', 15, 5, 0));
   // front wall with door opening (door at x=0, width 3.2, height 6.6)
@@ -407,7 +407,7 @@ export function buildWorld(scene) {
 }
 
 function room(g, w, d, h, wall, wall2, floor, dark) {
-  const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(floor)); f.rotation.x = -Math.PI / 2; f.receiveShadow = true; g.add(f);
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(floor)); f.rotation.x = -Math.PI / 2; f.position.y = 0.015; f.receiveShadow = true; g.add(f);
   g.add(box(w, h, 0.4, wall, 0, h / 2, -d / 2)); g.add(box(0.4, h, d, wall2, -w / 2, h / 2, 0)); g.add(box(0.4, h, d, wall2, w / 2, h / 2, 0));
   g.add(box(w, 0.6, 0.5, '#ffffff', 0, 0.3, -d / 2 + 0.2));
 }
