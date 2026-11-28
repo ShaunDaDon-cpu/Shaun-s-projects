@@ -301,20 +301,29 @@ export function makeShots(X) {
     cam(H(0.9, 1.6, 3.6), H(0, 4.6, 11), 52, { shake: 0.06 * jolt + 0.02, T });
     bangs.forEach((b, i) => sfx('BANG!', [300, 760, 420, 700][i], [380, 470, 560, 360][i], 150, (lt - b) / 0.55, '#fff', [-10, 8, -4, 10][i]));
   } });
+  // Collectors keep banging while Dad holds the door (between the slam shot and the door blast)
+  const bangT = []; for (let t = lines[16].start - 0.12 + 0.3; t < lines[19].start - 0.12 - 0.25; t += 0.85) bangT.push(t);
+  function dadHoldsDoor(T) { let jolt = 0; bangT.forEach((b) => (jolt += imp(T, b, 0.18, 1)));
+    W.door.rotation.set(-0.025 * jolt, 0, 0); W.door.position.copy(doorHome.p).add(new THREE.Vector3(0, 0, -0.14 * jolt)); W.doorCrack.material.opacity = 1;
+    const dd = C.dad; dd.place(H(0, 0, 0).x, 0, H(0, 0, 11.0 - 0.15 * jolt).z, PI); dd.armL.rotation.z = -1.35; dd.armR.rotation.z = 1.35; dd.expr = 'yell'; dd.upper.rotation.x = 0.12 * jolt; dd.talk = jolt > 0.3 ? 0.6 : 0;
+    C.col.forEach((c, i) => { c.place(H([-1.8, 0.6, 2.8][i], 0, 0).x, 0.4, H(0, 0, [14.2, 15.0, 14.6][i]).z, PI); c.screenMode = 'face'; });
+    return jolt; }
+  function bangText(T, x, y, size) { bangT.forEach((b, i) => sfx('BANG!', x + (i % 2) * 120, y + (i % 3) * 40, size, (T - b) / 0.5, '#fff', i % 2 ? 8 : -8)); }
   // 16 — I wasn't a ghost (dolly zoom)
   S.push({ line: 16, update(lt, d, T) {
     houseNight();
     const h = C.hero; h.place(H(12.8, 0, 2.6).x, 4.0, H(0, 0, 2.6).z, 0); h.expr = T > word(16, 'mistake') - 0.1 ? 'sad' : 'shock'; h.noBlink = true;
+    { const j = dadHoldsDoor(T); bangText(T, 300, 360, 110); }
     const e = smooth(lt / d); const z = lerp(11.4, 6.2, e); const dist = z - 2.6; const fov = 2 * Math.atan(2.4 / dist) * 180 / PI;
     cam(H(12.8, 8.6, z), H(12.8, 8.4, 2.6), fov);
   } });
   // 17 — Mom kneels
   S.push({ line: 17, update(lt, d, T) {
-    houseNight();
+    houseNight(); const jolt17 = dadHoldsDoor(T); bangText(T, 260, 330, 110);
     const h = C.hero; h.place(H(5, 0, 6).x, 0, H(0, 0, 6).z, -PI / 2); h.expr = 'shock';
     const m = C.mom; m.place(H(2.5, 0, 6).x, 0, H(0, 0, 6).z, PI / 2); m.hips.position.y = 1.15; m.legL.rotation.x = m.legR.rotation.x = 1.45;
     m.armL.rotation.x = m.armR.rotation.x = -1.25; m.armL.rotation.z = 0.12; m.armR.rotation.z = -0.12; m.expr = 'cry'; m.headG.rotation.x = -0.28;
-    const e = smooth(lt / d); cam(H(lerp(6.4, 5.8, e), 4.8, lerp(1.0, 1.6, e)), H(2.5, 3.8, 5.8), 42);
+    const e = smooth(lt / d); cam(H(lerp(6.4, 5.8, e), 4.8, lerp(1.0, 1.6, e)), H(2.5, 3.8, 5.8), 42, { shake: 0.05 * jolt17, T });
   } });
   // 18 — the whole town is hiding you (street porch lights)
   S.push({ line: 18, update(lt, d, T) {
@@ -501,9 +510,13 @@ export function makeShots(X) {
     sitAt(C.mom, D(-3, 0, -3.6).x, 0, D(0, 0, -3.6).z, 0, 1.95); C.mom.expr = 'smile'; C.mom.headG.rotation.y = 0.5;
     sitAt(C.dad, D(-3, 0, 3.6).x, 0, D(0, 0, 3.6).z, PI, 1.95); C.dad.expr = 'smile'; C.dad.armR.rotation.x = -1.2 + Math.sin(T * 3) * 0.2;
     sitAt(C.sis, D(0.5, 0, 3.6).x, 0, D(0, 0, 3.6).z, PI, 1.95); C.sis.expr = 'smile'; C.sis.headG.rotation.y = -0.7;
-    const e = smooth(lt / d); cam(D(lerp(-10, -5.5, e), lerp(9, 7.4, e), lerp(1.2, 0.4, e)), D(5.6, 3.2, 0), 42);
-    const end = lines[32].end; const fo = clamp((T - end - 0.5) / 0.8); UI.flash(fo, '#000');
-    const ti = clamp((T - end - 1.0) / 0.5); if (ti > 0) UI.add('DEATH<br>COUNTDOWN', `left:50%;top:46%;font-size:150px;line-height:1.05;text-align:center;color:#ff4057;opacity:${ti};transform:translate(-50%,-50%) scale(${lerp(1.1, 1, ti)})`, 'sfx');
+    const end = lines[32].end;
+    const g = C.ghost; sitAt(g, D(6.2, 0, 0).x, 0.25 + Math.sin(T * 2.2) * 0.12, D(0, 0, 0).z, -PI / 2, 1.95); C.setGhost(smooth(seg(lt, 0.4, 1.5)) * (0.92 + 0.08 * Math.sin(T * 7)));
+    g.armL.rotation.x = g.armR.rotation.x = -0.7; g.headG.rotation.z = 0.08 * Math.sin(T * 1.5); g.noBlink = true;
+    const wk = T > end + 0.3 && T < end + 0.95; g.expr = wk ? 'wink' : 'kind'; if (T > end + 0.2) C.hero.expr = 'smile';
+    const e = smooth(lt / d); cam(D(lerp(-10, -2.2, e), lerp(9, 5.9, e), lerp(1.2, 0.3, e)), D(lerp(5.6, 6.2, e), lerp(3.2, 4.5, e), 0), lerp(42, 30, e));
+    const fo = clamp((T - end - 1.15) / 0.6); UI.flash(fo, '#000');
+    const ti = clamp((T - end - 1.55) / 0.4); if (ti > 0) UI.add('DEATH<br>COUNTDOWN', `left:50%;top:46%;font-size:150px;line-height:1.05;text-align:center;color:#ff4057;opacity:${ti};transform:translate(-50%,-50%) scale(${lerp(1.1, 1, ti)})`, 'sfx');
   } });
   return S;
 }

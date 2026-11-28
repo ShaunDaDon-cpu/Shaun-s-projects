@@ -72,7 +72,14 @@ const SK = ['#f5c99b', '#e0a57a', '#c58c5c', '#8d5a3b', '#f2d0b0', '#a86b45'];
 const HA = ['short', 'long', 'pony', 'cap', 'spiky', 'bun', 'short', 'long'];
 const HC = ['#2b1a10', '#4a2f1d', '#ffd43b', '#e8590c', '#1a1a1a', '#7a3e1d', '#d9480f'];
 C.ext = Array.from({ length: 16 }, (_, i) => new L.Rig({ shirt: SH[i % SH.length], pants: ['#343a40', '#1864ab', '#5f3dc4', '#495057', '#2b8a3e'][i % 5], skin: SK[Math.floor(R() * SK.length)], hair: HA[i % HA.length], hairColor: HC[Math.floor(R() * HC.length)], scale: 0.85 + R() * 0.25 }));
-const allRigs = [C.hero, C.mom, C.dad, C.sis, C.gma, ...C.col, C.lunch, C.teacher, C.shades, C.old, C.diver, ...C.ext];
+// Grandma's ghost: translucent, glowing copy of her rig
+C.ghost = new L.Rig({ shirt: '#d0bfff', pants: '#b197fc', hair: 'bun', hairColor: '#ffffff', glasses: true, sleeves: true, skin: '#eef4ff', scale: 0.95 });
+C.ghostMats = []; C.ghost.root.traverse((o) => { if (!o.isMesh) return; o.castShadow = o.receiveShadow = false;
+  if (o === C.ghost.face) { o.material.transparent = true; C.ghostMats.push([o.material, 1.0]); return; }
+  o.material = o.material.clone(); o.material.transparent = true; o.material.depthWrite = false; if (o.material.emissive) o.material.emissive.set('#6f7dff'); C.ghostMats.push([o.material, 0.55]); });
+C.ghostGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#b8c4ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); C.ghostGlow.scale.set(9, 11, 1); C.ghostGlow.position.set(0, 4.2, 0.4); C.ghost.root.add(C.ghostGlow);
+C.setGhost = (a) => { C.ghostMats.forEach(([m, base]) => (m.opacity = base * a)); C.ghostGlow.material.opacity = 0.55 * a; };
+const allRigs = [C.ghost, C.hero, C.mom, C.dad, C.sis, C.gma, ...C.col, C.lunch, C.teacher, C.shades, C.old, C.diver, ...C.ext];
 allRigs.forEach((r) => scene.add(r.root));
 // phones
 C.phones = Array.from({ length: 10 }, (_, i) => { const p = new L.Phone(['#2a2d3a', '#e64980', '#1c7ed6', '#20c997', '#9c36b5', '#343a40', '#ffd43b'][i % 7]); scene.add(p.g); return p; });

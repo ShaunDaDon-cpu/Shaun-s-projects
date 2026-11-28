@@ -45,7 +45,7 @@ const EXPR = {
   scared: ['wide', 'up', 'o'], shock: ['wide', 'up', 'O'], sad: ['dot', 'up', 'frown'], cry: ['dot', 'up', 'frown', 'tears'],
   angry: ['dot', 'down', 'teeth'], determined: ['dot', 'down', 'flat'], sleep: ['sleep', 'none', 'flat'],
   unimpressed: ['half', 'none', 'flat'], kind: ['happy', 'up', 'smile'], peek: ['peek', 'none', 'flat'],
-  yell: ['dot', 'down', 'O'], softsad: ['dot', 'up', 'smile', 'tears'],
+  yell: ['dot', 'down', 'O'], softsad: ['dot', 'up', 'smile', 'tears'], wink: ['wink', 'none', 'grin'],
 };
 
 export function drawFace(ctx, expr, { talk = 0, blink = false, skin = '#f5c99b' } = {}) {
@@ -67,6 +67,9 @@ export function drawFace(ctx, expr, { talk = 0, blink = false, skin = '#f5c99b' 
     } else if (eyes === 'half') {
       ctx.beginPath(); ctx.ellipse(x, y + 6, 15, 14, 0, 0, Math.PI); ctx.fill();
       ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(x - 20, y + 4); ctx.lineTo(x + 20, y + 4); ctx.stroke();
+    } else if (eyes === 'wink') {
+      if (i === 0) { ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(x, y + 10, 16, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); }
+      else { ctx.beginPath(); ctx.ellipse(x, y, 15, 22, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 5, y - 8, 5.5, 0, Math.PI * 2); ctx.fill(); }
     } else if (eyes === 'happy') {
       ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(x, y + 10, 16, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
     } else if (eyes === 'sleep' || eyes === 'peek' || eyes === 'blink') {
@@ -105,7 +108,7 @@ export function drawFace(ctx, expr, { talk = 0, blink = false, skin = '#f5c99b' 
     ctx.fillStyle = '#5ec8ff';
     [[72, 148], [184, 148]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, y - 14); ctx.quadraticCurveTo(x + 11, y + 6, x, y + 10); ctx.quadraticCurveTo(x - 11, y + 6, x, y - 14); ctx.fill(); });
   }
-  if (['laugh', 'grin', 'kind', 'cry', 'softsad'].includes(expr)) {
+  if (['laugh', 'grin', 'kind', 'cry', 'softsad', 'wink'].includes(expr)) {
     ctx.fillStyle = 'rgba(255,110,130,0.35)'; ctx.beginPath(); ctx.ellipse(56, 150, 20, 11, 0, 0, Math.PI * 2); ctx.ellipse(200, 150, 20, 11, 0, 0, Math.PI * 2); ctx.fill();
   }
 }

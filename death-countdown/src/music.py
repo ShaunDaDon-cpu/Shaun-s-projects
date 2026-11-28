@@ -202,6 +202,7 @@ add(sfx, ov - 0.12, boom(1.6, 55), 0.55); add(sfx, ov - 0.12, brass([m2f(n) for 
 for x in np.arange(st[15] + 0.02, st[15] + 0.5, 0.11): add(sfx, x, knock() * 0.5, 0.3)  # Dad's running footsteps
 for b in (0.2, 0.58, 0.95, 1.3): add(sfx, st[15] + b, thud(), 0.75); add(sfx, st[15] + b + 0.01, hp(noise(0.12), 2500) * np.exp(-tt(0.12) * 30), 0.25)  # monsters banging, wood cracking
 add(sfx, st[16], riser(st[17] - st[16]), 0.18)
+for b in np.arange(st[16] + 0.3, st[19] - 0.25, 0.85): add(sfx, b, thud(), 0.55); add(sfx, b + 0.01, hp(noise(0.1), 2500) * np.exp(-tt(0.1) * 30), 0.18)  # monsters keep banging on the door
 # door blast
 for x in np.arange(st[19], st[19] + 0.22, 0.07): add(sfx, x, thud(0.5), 0.4)
 add(sfx, st[19] + 0.22, boom(2.0, 90), 0.5); add(sfx, st[19] + 0.22, hp(noise(0.6), 800) * np.exp(-tt(0.6) * 6), 0.3)
@@ -240,8 +241,10 @@ for i, x in enumerate(np.arange(st[27] + 1.0, st[28], 0.45)): add(sfx, x, knock(
 for i, x in enumerate(np.arange(st[29] + 0.4, st[30] - 0.1, 0.08)): add(sfx, x, bell(m2f(76 + [0, 3, 7, 12, 15][i % 5]), 0.5), 0.04, pan=np.cos(i))
 # dad kicking in couch (cushion thumps)
 for x in np.arange(st[30] + 0.1, st[30] + 2.2, 0.24): add(sfx, x, lp(noise(0.1), 500) * np.exp(-tt(0.1) * 30), 0.25, pan=-0.4)
+for i, x in enumerate(np.arange(st[32] + 0.4, st[32] + 1.6, 0.12)): add(sfx, x, bell(m2f(84 + [0, 4, 7, 11][i % 4]), 0.9), 0.03, pan=np.sin(i))  # ghost shimmer
+add(sfx, L[32]['end'] + 0.32, bell(m2f(96), 0.6) + bell(m2f(103), 0.6) * 0.6, 0.12)  # wink ting
 # title hit
-add(sfx, L[32]['end'] + 1.0, boom(2.4, 50), 0.45); add(sfx, L[32]['end'] + 1.0, bell(m2f(48), 3) + bell(m2f(55), 3), 0.15)
+add(sfx, L[32]['end'] + 1.55, boom(2.4, 50), 0.45); add(sfx, L[32]['end'] + 1.55, bell(m2f(48), 3) + bell(m2f(55), 3), 0.15)
 # transitions: soft whoosh on selected cuts
 for k in (1, 2, 3, 6, 8, 9, 10, 17, 18, 26, 28, 31, 32): add(sfx, st[k] - 0.15, whoosh(0.3, True), 0.08)
 
