@@ -79,6 +79,12 @@ C.ghostMats = []; C.ghost.root.traverse((o) => { if (!o.isMesh) return; o.castSh
   o.material = o.material.clone(); o.material.transparent = true; o.material.depthWrite = false; if (o.material.emissive) o.material.emissive.set('#6f7dff'); C.ghostMats.push([o.material, 0.55]); });
 C.ghostGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#b8c4ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); C.ghostGlow.scale.set(9, 11, 1); C.ghostGlow.position.set(0, 4.2, 0.4); C.ghost.root.add(C.ghostGlow);
 C.setGhost = (a) => { C.ghostMats.forEach(([m, base]) => (m.opacity = base * a)); C.ghostGlow.material.opacity = 0.55 * a; };
+// 3D tears for Mom: glossy drops parented to her head, animated per shot
+C.tears = Array.from({ length: 4 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), new THREE.MeshPhongMaterial({ color: '#8fdcff', emissive: '#1f6fb0', specular: '#ffffff', shininess: 120, transparent: true, opacity: 0.88 })); m.visible = false; C.mom.headG.add(m); return m; });
+C.animTears = (T) => { const hs = 1.35, fz = hs / 2 + 0.05; C.tears.forEach((m, k) => { const side = k % 2 ? 1 : -1; const ph = (T * 0.42 + Math.floor(k / 2) * 0.5 + (k % 2) * 0.23) % 1; m.visible = true;
+  let y = 0.66 - ph * 0.66, z = fz, x = side * 0.25 + Math.sin(ph * 6 + k) * 0.025 * ph;
+  if (ph > 0.9) { const f = (ph - 0.9) / 0.1; y -= f * f * 0.9; z += f * 0.3; }
+  m.position.set(x, y, z); const sc = 0.6 + 0.4 * Math.min(1, ph * 2.5); m.scale.set(sc, sc * (ph > 0.9 ? 1.7 : 1.3), sc * 0.7); m.material.opacity = ph < 0.06 ? ph / 0.06 * 0.88 : 0.88; }); };
 const allRigs = [C.ghost, C.hero, C.mom, C.dad, C.sis, C.gma, ...C.col, C.lunch, C.teacher, C.shades, C.old, C.diver, ...C.ext];
 allRigs.forEach((r) => scene.add(r.root));
 // phones
@@ -126,6 +132,7 @@ const DURATION = timeline.duration;
 
 function resetAll() {
   allRigs.forEach((r) => r.reset());
+  C.tears.forEach((m) => (m.visible = false));
   C.phones.forEach((p) => { p.g.visible = false; p.glow.material.opacity = 0; p.glow.material.color.set('#7fe8ff'); }); W.dust.material.color.set('#d8c3a5'); W.sparks.material.color.set('#9ff3ff'); W.orbs.material.color.set('#5dff9c');
   C.blanket.scale.set(1, 1, 1); [C.clip, C.blanket, C.armA, C.armB, C.handA, C.handB, W.remote, W.cane, ...C.flashlights].forEach((o) => (o.visible = false));
   C.redGlow.material.opacity = 0;

@@ -332,7 +332,7 @@ export function makeShots(X) {
     houseNight(); const jolt17 = dadHoldsDoor(T); bangText(T, 260, 330, 110);
     const h = C.hero; h.place(H(5, 0, 6).x, 0, H(0, 0, 6).z, -PI / 2); h.expr = 'shock';
     const m = C.mom; m.place(H(2.5, 0, 6).x, 0, H(0, 0, 6).z, PI / 2); m.hips.position.y = 1.15; m.legL.rotation.x = m.legR.rotation.x = 1.45;
-    m.armL.rotation.x = m.armR.rotation.x = -1.25; m.armL.rotation.z = 0.12; m.armR.rotation.z = -0.12; m.expr = 'cry'; m.headG.rotation.x = -0.28;
+    m.armL.rotation.x = m.armR.rotation.x = -1.25; m.armL.rotation.z = 0.12; m.armR.rotation.z = -0.12; m.expr = 'cry'; m.headG.rotation.x = -0.28; C.animTears(T);
     const e = smooth(lt / d); cam(H(lerp(6.4, 5.8, e), 4.8, lerp(1.0, 1.6, e)), H(2.5, 3.8, 5.8), 42, { shake: 0.05 * jolt17, T });
   } });
   // 18 — the whole town is hiding you (street porch lights)
