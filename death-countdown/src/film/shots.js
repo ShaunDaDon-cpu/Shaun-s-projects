@@ -436,17 +436,25 @@ export function makeShots(X) {
     stream(W.dust, H(-3, 0.5, 14), H(3, 8, 6), T * 0.08, { arc: 3, jit: 6, size: 0.25, op: 0.7 }); W.dust.material.color.set('#fff1c4');
     const e = smooth(lt / d); cam(H(0.9, lerp(0.9, 1.3, e), lerp(3.4, 4.6, e)), H(0, 4.4, 11), 40);
   } });
-  // 25 — "Overdue? Put it on my tab."
+  // 25 — "Overdue? Put it on my tab." — wider view: Grandma faces camera, the Collector looms in from the right, she slaps her phone onto his screen
   S.push({ line: 25, update(lt, d, T) {
-    houseNight(); W.door.visible = false;
-    const c = C.col[2]; const turn = easeOut(seg(lt, 0, 0.4)); c.place(H(0.9, 0, 6.7).x, 0, H(0, 0, 6.7).z, lerp(PI + 0.15, 0.6, turn)); c.screenMode = 'face'; c.upper.rotation.x = 0.35 * turn;
-    const g = C.gma; g.place(H(3, 0, 9.1).x, 0, H(0, 0, 9.1).z, PI); g.expr = 'smug';
-    const slap = word(25, 'tab') - (T - lt) + 0.1; g.armR.rotation.x = lerp(-0.4, -2.5, easeOut(seg(lt, slap - 0.4, slap))); g.armL.rotation.x = -0.25;
-    const hp = g.handWorld('L'); W.cane.visible = true; W.cane.scale.setScalar(0.6); W.cane.position.set(hp.x, 0, hp.z + 0.25);
+    houseNight(); W.door.visible = false; W.lampLight.intensity = 70; hemi.intensity = 0.85;
+    const slap = word(25, 'tab') - (T - lt) + 0.1; const hit = imp(lt, slap, 0.45, 1);
+    const g = C.gma; g.place(H(0.6, 0, 7.8).x, 0, H(0, 0, 7.8).z, PI + 0.35); g.expr = 'smug';
+    const c = C.col[2]; const turn = easeOut(seg(lt, 0, 0.4)); const back = lt > slap ? easeOut(seg(lt, slap, slap + 0.25)) : 0;
+    c.place(H(3.3 + 0.7 * back, 0, 0).x, 0, H(0, 0, 8.4).z, lerp(PI, -PI / 2 + 0.25, turn)); c.screenMode = 'face'; c.upper.rotation.x = 0.45 * turn - 0.3 * hit;
+    c.headG.rotation.z = 0.85 * hit; c.upper.rotation.z = -0.18 * hit; c.armL.rotation.z = -0.7 * hit; c.armR.rotation.z = 0.7 * hit;
+    let ax = 0; if (lt < slap - 0.55) ax = -0.2; else if (lt < slap - 0.15) ax = lerp(-0.2, 0.9, smooth(seg(lt, slap - 0.55, slap - 0.15))); else if (lt < slap) ax = lerp(0.9, -2.2, easeIn(seg(lt, slap - 0.15, slap))); else ax = -2.2;
+    g.armL.rotation.x = ax; g.armL.rotation.z = lt > slap - 0.15 ? 0.35 : 0; g.upper.rotation.y = lt > slap - 0.15 && lt < slap + 0.25 ? 0.3 : -0.12 * smooth(seg(lt, slap - 0.55, slap - 0.15)); g.armR.rotation.x = -0.25;
+    const hp = g.handWorld('R'); W.cane.visible = true; W.cane.scale.setScalar(0.6); W.cane.position.set(hp.x, 0, hp.z + 0.25);
     const cf = new THREE.Vector3(); c.face.getWorldPosition(cf);
-    const ph = hold(g, C.phones[1], cf, 'R', 0.3, 1.3); ph.countdown(31 * YEAR + 30, { color: '#d6a8ff' });
-    cam(H(5.2, 5.2, 5.0), H(2.2, 5.0, 8.3), 46, { shake: imp(lt, slap, 0.35, 0.18), T });
-    sfx('SLAP!', 640, 560, 140, (lt - slap) / 0.7, '#d6a8ff', 8);
+    const ph = hold(g, C.phones[1], cf, 'L', 0.3, 1.3); ph.countdown(31 * YEAR + 30, { color: '#d6a8ff' });
+    const h = C.hero; h.place(H(-2.6, 0, 10.4).x, 0, H(0, 0, 10.4).z, PI + 0.5); h.expr = lt > slap ? 'shock' : 'scared';
+    const m = C.mom; m.place(H(-4.4, 0, 9.2).x, 0, H(0, 0, 9.2).z, PI + 0.8); m.expr = lt > slap ? 'shock' : 'worried';
+    burst(W.sparks, cf, lt - slap, { speed: 7, life: 0.5, size: 0.35, seed: 25, g: 2 }); if (lt > slap) W.sparks.material.color.set('#e5b8ff');
+    fx2.color.set('#ffe3c4'); fx2.intensity = 40; fx2.position.copy(H(-1, 8, 2));
+    const e = smooth(lt / d); cam(H(lerp(-4.6, -3.6, e), lerp(7.8, 7.0, e), lerp(-3.6, -1.8, e)), H(lerp(1.3, 1.5, e), 4.6, 7.8), 60, { shake: 0.45 * imp(lt, slap, 0.35, 1), T });
+    UI.flash(imp(lt, slap, 0.12, 0.45), '#f3d9fa'); sfx('SLAP!', 620, 480, 190, (lt - slap) / 0.8, '#d6a8ff', 8);
   } });
   // 26 — numbers transfer
   S.push({ line: 26, update(lt, d, T) {
