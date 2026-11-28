@@ -127,7 +127,7 @@ const DURATION = timeline.duration;
 function resetAll() {
   allRigs.forEach((r) => r.reset());
   C.phones.forEach((p) => { p.g.visible = false; p.glow.material.opacity = 0; p.glow.material.color.set('#7fe8ff'); }); W.dust.material.color.set('#d8c3a5'); W.sparks.material.color.set('#9ff3ff'); W.orbs.material.color.set('#5dff9c');
-  [C.clip, C.blanket, C.armA, C.armB, C.handA, C.handB, W.remote, W.cane, ...C.flashlights].forEach((o) => (o.visible = false));
+  C.blanket.scale.set(1, 1, 1); [C.clip, C.blanket, C.armA, C.armB, C.handA, C.handB, W.remote, W.cane, ...C.flashlights].forEach((o) => (o.visible = false));
   C.redGlow.material.opacity = 0;
   scene.add(W.pan); W.pan.visible = false; W.pan.rotation.set(0, 0, 0); W.pan.position.set(0, -50, 0);
   scene.add(W.cane); W.cane.rotation.set(0, 0, 0); scene.add(C.armB, C.handB); C.armB.material = L.mat('#ff8c1a'); C.handB.material = L.mat('#f5c99b'); C.armB.rotation.set(0, 0, 0);
@@ -170,5 +170,5 @@ window.renderAt = (T) => {
 // hero face snapshot for collector screens
 const heroFaceCanvas = document.createElement('canvas'); heroFaceCanvas.width = heroFaceCanvas.height = 256;
 L.drawFace(heroFaceCanvas.getContext('2d'), 'scared', {});
-window.SHOT_STARTS = starts; window.__C = C;
+window.SHOT_STARTS = starts; window.__C = C; window.__R = () => renderer.render(scene, camera);
 window.READY = true;

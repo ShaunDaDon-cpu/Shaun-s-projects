@@ -234,9 +234,19 @@ export function makeShots(X) {
   // 10 — mom checks pulse
   S.push({ line: 10, update(lt, d, T) {
     light('inNight', [SET.bedroom.x, 0, SET.bedroom.z]); W.moon.intensity = 1.8; W.nightLamp.intensity = 40; hemi.intensity = 0.85;
-    heroInBed(lt / d > 0.62 ? 'peek' : 'sleep'); C.hero.armR.rotation.x = -0.35;
-    const m = C.mom; m.place(B(3.5, 0, -2.6).x, 0, B(0, 0, -2.6).z, -PI / 2); m.upper.rotation.x = 0.5; m.armL.rotation.x = -1.0; m.armR.rotation.x = -0.9; m.expr = 'cry';
-    const e = smooth(lt / d); cam(B(lerp(-8.6, -6.2, e), lerp(8.4, 7.6, e), lerp(9.0, 5.8, e)), B(lerp(1.5, 1.6, e), lerp(3.4, 3.0, e), lerp(-3.5, -3.4, e)), lerp(62, 52, e));
+    // hero curled on his side facing camera, blanket up to the shoulders, top arm resting on the blanket
+    const h = C.hero; h.place(B(0, 0, 0).x, 3.1, B(0, 0, 0.5).z, 0); h.root.rotation.order = 'ZYX'; h.root.rotation.set(-PI / 2, 0, PI / 2);
+    h.legL.rotation.x = -0.55; h.legR.rotation.x = -0.45; h.armR.rotation.x = 0.12; h.armR.rotation.z = -0.32; h.armL.rotation.x = 0.15; h.headG.rotation.x = 0.1;
+    h.expr = lt / d > 0.62 ? 'peek' : 'sleep'; h.noBlink = true;
+    C.blanket.visible = true; C.blanket.position.copy(B(0, 3.2, 0.7)); C.blanket.scale.set(1.04, 4.8, 1.05);
+    fx2.color.set('#c3ccff'); fx2.intensity = 22; fx2.position.copy(B(-4, 7.5, -1.5));
+    C.phones[1].g.visible = true; C.phones[1].g.scale.setScalar(1); C.phones[1].g.position.copy(B(3.8, 2.07, -5.0)); C.phones[1].g.rotation.set(-PI / 2, 0, 0.3); C.phones[1].draw(heroPhone()); C.phones[1].glow.material.opacity = 0.25;
+    // Mom leans over from behind him, fingers on his wrist: fit her lean + position so her hand lands on his wrist
+    const target = h.handWorld('R').add(new THREE.Vector3(0.1, 0.3, -0.2));
+    const m = C.mom; m.place(B(3.4, 0, -2.0).x, 0, B(0, 0, -2.0).z, -PI / 2); m.armL.rotation.x = -0.5; m.armR.rotation.x = -1.05; m.armR.rotation.z = -0.15; m.expr = 'cry';
+    m.upper.rotation.x = 0.08; m.headG.rotation.x = 0.38; m.headG.rotation.y = -0.25; let lo = -0.6, hi = -2.9; for (let it = 0; it < 16; it++) { const mid = (lo + hi) / 2; m.armR.rotation.x = mid; const hp = m.handWorld('R'); if (hp.y < target.y) lo = mid; else hi = mid; }
+    m.armR.rotation.x = (lo + hi) / 2; const hp = m.handWorld('R'); m.root.position.x = Math.max(B(2.9, 0, 0).x, m.root.position.x + target.x - hp.x); m.root.position.z += target.z - hp.z;
+    const e = smooth(lt / d); cam(B(lerp(-6.6, -5.4, e), lerp(9.4, 8.6, e), lerp(-0.4, -1.6, e)), B(lerp(1.2, 1.3, e), lerp(4.3, 4.4, e), lerp(-3.6, -3.9, e)), lerp(60, 52, e));
   } });
   function heroInBed(expr) {
     const h = C.hero; h.place(B(0, 0, 0).x, 2.5, B(0, 0, -0.7).z, 0); h.root.rotation.x = -PI / 2; h.expr = expr; h.noBlink = true;
